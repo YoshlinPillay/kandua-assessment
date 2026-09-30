@@ -19,7 +19,7 @@ explains the options with trade-offs, writes code and docs, runs checks, and sto
 |---|---|---|
 | Planning | Chose the stack. Rejected Mage.ai and Render. Asked for Cube + conversational analytics and AWS. | Read the brief, surveyed the server, explained dlt, Dagster and Lightdash, and presented the options and constraints (Render free PG expiry, Lightdash AI is enterprise-only). |
 | P1 Guardrails | Reviewed the rules | Wrote `CLAUDE.md`, conventions, hooks, skills, the subagent and the hook tests |
-| P2 Profile | _tbd_ | _tbd_ |
+| P2 Profile | Chose the visit grain (after asking for concrete examples and whether any time signal exists), duplicate handling, the Tiger's Milk Lager assumption and the key strategy | Profiled all 3 files, showed the sensitivity of each open question in numbers (e.g. Q4 = 104 vs 74), checked for hidden time signals (uuid version, file order) |
 
 ## Guardrails and why
 | Guardrail | Type | Why |
@@ -41,4 +41,5 @@ explains the options with trade-offs, writes code and docs, runs checks, and sto
 |---|---|---|---|---|
 | 1 | P1 | The first version of the "don't read `.env`" regex in `guard_bash.sh` let `cat .env` through (the whitespace after the command was consumed twice by the pattern). | The pattern needed a word-boundary-style prefix and an optional middle segment. | `tests/hooks/test_hooks.sh` failed on the `cat .env` case. |
 | 2 | P1 | The PostToolUse lint hook ran `sqlfluff`/`dbt parse` inside a subshell, so their `exit 2` would never reach Claude Code. | Run in the main shell so the exit code propagates. | Agent self-review of the hook before running it. |
+| 4 | P2 | On first sight the agent flagged "Black Label" (typed `beer`, 1.2 units) as a likely mislabelled Johnnie Walker whiskey. | In the Cape Town context it is Carling Black Label, a beer. The catalog's units and price are consistent with that, so it was kept as beer rather than "fixed". | Agent re-checked against the domain context and the price and units before writing it into the profile. The profiling skill forbids fixing data during profiling. |
 | 3 | P1 | While fixing #1, the agent tried to patch the file with a shell heredoc containing the literal test string `source .env`. | The live `guard_bash.sh` hook blocked the command. That was a false positive, but it showed the hook is active. The edit was redone with the Edit tool. | Hook fired in-session. |

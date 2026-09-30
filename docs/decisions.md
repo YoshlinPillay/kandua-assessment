@@ -12,5 +12,10 @@ the human.
 | D-004 | 2026-09-30 | Hosting on **AWS only**: Terraform, RDS Postgres + one EC2 (compose), GH Actions OIDC | Render.com, self-hosted behind Caddy, ECS Fargate | Render free Postgres expires after 30 days and 512MB RAM is too small for Lightdash. Fargate adds cost and complexity for this size. The brief asks for read-only DB credentials, which RDS gives cleanly. | Human |
 | D-005 | 2026-09-30 | Transactional tables built by dbt `core` models with **enforced contracts** (Postgres PK/FK constraints) | Hand-written DDL migrations + separate load step | One tool owns the schema. The constraints are real in Postgres, and the tests and docs sit next to the models. Trade-off: dbt rebuilds the tables on each run, which suits a batch analytics load but isn't how a live OLTP app would manage its schema. | Agent proposed, human approved |
 
+| D-006 | 2026-09-30 | **Each visit event = one visit** (uuid = visit id) | Visit = (bar, date) | No time signal exists: the dates have no time, the uuids are v4 (random) and the file order is random. Reading (bar, date) as the visit would contradict 28 groups that contain both a no-drink and a drink event. | Human (after agent showed examples + impact: Q4 104 vs 74) |
+| D-007 | 2026-09-30 | Keep 7 identical-except-uuid event pairs | Drop one of each pair | Distinct source ids. Same-day repeats are common (129 bar-days have more than one event). | Human |
+| D-008 | 2026-09-30 | Tiger's Milk Lager = beer, 1.2 units, assumed (seed with `is_assumed`) | Exclude from unit-based answers | A lager is a beer, and every catalog beer is 1.2 units. | Human |
+| D-009 | 2026-09-30 | Surrogate keys. Barcode non-unique. Shared bar address kept and flagged. | Null out Don Julio's barcode | Don't silently change source data. Warn-level tests keep the collision visible. | Human |
+
 ## Interpretation decisions (Q1–Q7)
 _Filled in during P5. Each entry lists the options with the number each produces and the option the human chose._

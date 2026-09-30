@@ -10,7 +10,7 @@ Status: ☐ todo · ◐ in progress · ☑ done (verified).
 | 02 | ERM from the UML (diagram as code) | `docs/erm/transactional.dbml` | ☐ |
 | 03 | Implement tables in an open-source SQL DB, running locally with minimal effort | `docker-compose.yml`, `transform/models/core/` | ☐ |
 | 03+ | Optional cloud deploy | `infra/terraform/`, `.github/workflows/deploy.yml` | ☐ |
-| 04 | Explore the raw files and load them with an ELT tool | `docs/data_profile.md`, `ingestion/` | ☐ |
+| 04 | Explore the raw files and load them with an ELT tool | `docs/data_profile.md`, `ingestion/` | ◐ (profiled) |
 | 05 Q1 | Most-drunk beverage type | `transform/analyses/q1_*.sql` | ☐ |
 | 05 Q2 | Most-visited bar | `transform/analyses/q2_*.sql` | ☐ |
 | 05 Q3 | Favourite beer brand | `transform/analyses/q3_*.sql` | ☐ |
