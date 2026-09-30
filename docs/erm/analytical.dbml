@@ -1,0 +1,83 @@
+// Juan the Drinker: analytical model (Q9), a Kimball star schema in dbt schema `marts`.
+// Built only from the 3NF `core` schema by dbt, so there is a single writer and no update anomalies in practice.
+// Render: paste into https://dbdiagram.io
+
+Project juan_the_drinker_analytics {
+  database_type: 'PostgreSQL'
+  Note: 'Denormalized on purpose for read performance and BI simplicity (see docs/ANSWERS.md Q9 and Q10).'
+}
+
+Table marts.dim_date {
+  date_day date [pk]
+  iso_week_start date [note: 'Monday of ISO week (NHS test)']
+  month_start date
+  iso_year integer
+  iso_week integer
+  calendar_year integer
+  calendar_month integer
+  day_name text
+  iso_day_of_week integer
+  is_weekend boolean
+}
+
+Table marts.dim_bar {
+  bar_id text [pk]
+  bar_name text [unique]
+  address text
+}
+
+Table marts.dim_beverage {
+  beverage_id text [pk]
+  beverage_name text [unique]
+  beverage_type text [note: 'folded in from core.beverage_type (denormalized)']
+  alcohol_units_per_serving numeric(6,2)
+  barcode text
+  is_assumed boolean
+}
+
+Table marts.fct_drink {
+  drink_id text [pk, note: 'grain: one drink line']
+  visit_id uuid [note: 'degenerate dimension / drill-across to fct_visit']
+  date_day date [ref: > marts.dim_date.date_day]
+  bar_id text [ref: > marts.dim_bar.bar_id]
+  beverage_id text [ref: > marts.dim_beverage.beverage_id]
+  is_happy_hour boolean
+  quantity integer [note: 'additive']
+  unit_price numeric(10,2) [note: 'non-additive; price at the bar']
+  alcohol_units numeric [note: 'additive: quantity x units per serving']
+  full_price_amount numeric [note: 'additive']
+  amount_paid numeric [note: 'additive']
+  amount_saved numeric [note: 'additive']
+}
+
+Table marts.fct_visit {
+  visit_id uuid [pk, note: 'grain: one visit, including visits without a drink']
+  date_day date [ref: > marts.dim_date.date_day]
+  bar_id text [ref: > marts.dim_bar.bar_id]
+  has_drink boolean
+  drink_lines integer
+  servings integer
+  alcohol_units numeric
+  amount_paid numeric
+  amount_saved numeric
+}
+
+Table marts.fct_daily_consumption {
+  date_day date [pk, ref: - marts.dim_date.date_day, note: 'grain: one day, zero days included']
+  visits integer
+  servings integer
+  alcohol_units numeric
+  is_drunk boolean [note: 'units >= 14 (D-015)']
+  is_in_last_30_days_of_data boolean [note: 'Q5 window (D-014)']
+}
+
+Table marts.fct_weekly_consumption {
+  iso_week_start date [pk, note: 'grain: one ISO week, zero weeks included']
+  days_covered integer
+  servings integer
+  alcohol_units numeric
+  drunk_days integer
+  nhs_weekly_limit integer
+  is_over_nhs_limit boolean
+  is_partial_week boolean
+}

@@ -1,0 +1,91 @@
+version: 2
+
+# Analytical star schema (Q9). Implements docs/erm/analytical.dbml. Facts carry precomputed additive measures.
+# Lightdash/Cube metrics are added to these models in P6 (single semantic source, CLAUDE.md rule 4).
+
+models:
+  - name: dim_date
+    description: Calendar dimension, one row per day over the full years covered by the data.
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+      - name: iso_week_start
+        description: Monday of the ISO week (NHS weekly test, D-016).
+
+  - name: dim_bar
+    description: One row per bar.
+    columns:
+      - name: bar_id
+        data_tests: [unique, not_null]
+      - name: bar_name
+        data_tests: [unique, not_null]
+
+  - name: dim_beverage
+    description: One row per beverage, with its type folded in (denormalized on purpose, see Q10).
+    columns:
+      - name: beverage_id
+        data_tests: [unique, not_null]
+      - name: beverage_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: [beer, tequila, whiskey]}
+
+  - name: fct_drink
+    description: Transaction fact. One row per drink line.
+    columns:
+      - name: drink_id
+        data_tests: [unique, not_null]
+      - name: date_day
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_date'), field: date_day}
+      - name: bar_id
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim_bar'), field: bar_id}
+      - name: beverage_id
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim_beverage'), field: beverage_id}
+      - name: quantity
+        description: Servings.
+      - name: alcohol_units
+        description: quantity × alcohol units per serving.
+      - name: full_price_amount
+        description: quantity × bar price (ZAR), before any happy-hour discount.
+      - name: amount_paid
+        description: What Juan paid. 50% of full price during happy hour (brief).
+      - name: amount_saved
+        description: full_price_amount − amount_paid.
+
+  - name: fct_visit
+    description: Accumulating fact. One row per visit (including visits without a drink), with drink measures rolled up.
+    columns:
+      - name: visit_id
+        data_tests: [unique, not_null]
+      - name: date_day
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim_date'), field: date_day}
+      - name: bar_id
+        data_tests:
+          - relationships:
+              arguments: {to: ref('dim_bar'), field: bar_id}
+
+  - name: fct_daily_consumption
+    description: Periodic snapshot. One row per day between the first and last day of data, zero days included.
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+      - name: is_drunk
+        description: Units that day ≥ var drunk_units_threshold (14), summed across all visits (D-015).
+
+  - name: fct_weekly_consumption
+    description: Periodic snapshot. One row per ISO week, zero weeks included (D-016).
+    columns:
+      - name: iso_week_start
+        data_tests: [unique, not_null]
+      - name: is_over_nhs_limit
+        description: Weekly units > var nhs_weekly_units_limit (14).

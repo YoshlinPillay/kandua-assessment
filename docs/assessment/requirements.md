@@ -11,22 +11,22 @@ Status: ☐ todo · ◐ in progress · ☑ done (verified).
 | 03 | Implement tables in an open-source SQL DB, running locally with minimal effort | `docker-compose.yml`, `transform/models/core/` | ☑ (dbt build green, live drift test) |
 | 03+ | Optional cloud deploy | `infra/terraform/`, `.github/workflows/deploy.yml` | ☐ |
 | 04 | Explore the raw files and load them with an ELT tool | `docs/data_profile.md`, `ingestion/`, `orchestration/` | ☑ (dlt load via Dagster, counts asserted) |
-| 05 Q1 | Most-drunk beverage type | `transform/analyses/q1_*.sql` | ☐ |
-| 05 Q2 | Most-visited bar | `transform/analyses/q2_*.sql` | ☐ |
-| 05 Q3 | Favourite beer brand | `transform/analyses/q3_*.sql` | ☐ |
-| 05 Q4 | Visits without a drink | `transform/analyses/q4_*.sql` | ☐ |
-| 05 Q5 | Times drunk last month (14 units) | `transform/analyses/q5_*.sql` | ☐ |
-| 05 Q6 | Alcoholic per NHS 14 units/week? | `transform/analyses/q6_*.sql` | ☐ |
-| 05 Q7 | Money saved on happy hours (50%) | `transform/analyses/q7_*.sql` | ☐ |
-| 05 Q8 | Does the transactional model respect 1NF/2NF/3NF? | `docs/ANSWERS.md#q8` | ☐ |
-| 05 Q9 | Analytical model proposal | `docs/erm/analytical.dbml`, `transform/models/marts/` | ☐ |
-| 05 Q10 | Does the analytical model respect the NFs? | `docs/ANSWERS.md#q10` | ☐ |
+| 05 Q1 | Most-drunk beverage type | `transform/analyses/q1_*.sql` | ☑ (SQL = pandas, tested) |
+| 05 Q2 | Most-visited bar | `transform/analyses/q2_*.sql` | ☑ (SQL = pandas, tested) |
+| 05 Q3 | Favourite beer brand | `transform/analyses/q3_*.sql` | ☑ (SQL = pandas, tested) |
+| 05 Q4 | Visits without a drink | `transform/analyses/q4_*.sql` | ☑ (SQL = pandas, tested) |
+| 05 Q5 | Times drunk last month (14 units) | `transform/analyses/q5_*.sql` | ☑ (SQL = pandas, tested) |
+| 05 Q6 | Alcoholic per NHS 14 units/week? | `transform/analyses/q6_*.sql` | ☑ (SQL = pandas, tested) |
+| 05 Q7 | Money saved on happy hours (50%) | `transform/analyses/q7_*.sql` | ☑ (SQL = pandas, tested) |
+| 05 Q8 | Does the transactional model respect 1NF/2NF/3NF? | `docs/ANSWERS.md#q8` | ☑ |
+| 05 Q9 | Analytical model proposal | `docs/erm/analytical.dbml`, `transform/models/marts/` | ☑ (built, reconciled) |
+| 05 Q10 | Does the analytical model respect the NFs? | `docs/ANSWERS.md#q10` | ☑ |
 | 06 | Dashboard for Q1–Q7 + extra analytics, every number traceable | `lightdash/`, dbt metrics | ☐ |
 
 ## Deliverables
 | # | Requirement | Where | Status |
 |---|---|---|---|
-| D1 | Document with ERM + answers + SQL + dashboard screenshots | `docs/ANSWERS.md` (+ exported doc) | ☐ |
+| D1 | Document with ERM + answers + SQL + dashboard screenshots | `docs/ANSWERS.md` (+ exported doc) | ◐ (screenshots pending P6) |
 | D2 | Git repo URL shared | GitHub | ☐ |
 | D3a | README: run locally + cloud, no credentials | `README.md` | ☐ |
 | D3b | Clean, readable code | lint + review | ☐ |

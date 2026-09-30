@@ -49,7 +49,8 @@ lint:  ## ruff + sqlfluff + hook tests
 test-hooks:  ## Verify the Claude Code guard hooks
 	tests/hooks/test_hooks.sh
 
-test: test-hooks  ## All tests
+test: test-hooks  ## All tests (compiles the Q1–Q7 analyses first so pytest can run them)
+	$(MAKE) dbt ARGS="compile --select path:analyses --quiet"
 	$(BIN)/pytest -q
 
 dbt:  ## Run dbt with the project profile, e.g. make dbt ARGS="build"

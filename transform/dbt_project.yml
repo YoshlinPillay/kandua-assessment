@@ -8,6 +8,11 @@ seed-paths: ["seeds"]
 test-paths: ["tests"]
 analysis-paths: ["analyses"]
 macro-paths: ["macros"]
+vars:
+  # Business thresholds from the brief, defined once and used by marts (and surfaced to BI via the models).
+  drunk_units_threshold: 14      # "Juan needs 14 units of alcohol to get drunk"
+  nhs_weekly_units_limit: 14     # NHS: no more than 14 units per week
+
 clean-targets: ["target", "dbt_packages"]
 
 models:
