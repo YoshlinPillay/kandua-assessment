@@ -151,11 +151,13 @@ services:
       CUBEJS_API_SECRET: ${CUBEJS_API_SECRET}
       CUBEJS_DEV_MODE: "true"  # local playground on :4000; disabled on AWS
       DBT_MANIFEST_PATH: /cube/dbt/manifest.json
+      DBT_CATALOG_PATH: /cube/dbt/catalog.json
     ports:
       - "4000:4000"
     volumes:
       - ./semantic/cube:/cube/conf
       - ./transform/target/manifest.json:/cube/dbt/manifest.json:ro
+      - ./transform/target/catalog.json:/cube/dbt/catalog.json:ro
 
 volumes:
   pgdata:

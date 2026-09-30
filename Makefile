@@ -31,6 +31,7 @@ load:  ## dlt: Google Drive JSON -> Postgres raw schema
 pipeline: load  ## Full ELT: dlt load, then dbt deps + build (models, seeds, tests)
 	$(MAKE) dbt ARGS="deps --quiet"
 	$(MAKE) dbt ARGS="build"
+	$(MAKE) dbt ARGS="docs generate --quiet"  # catalog.json: real column types for Cube + the dbt docs site
 
 dagster-run:  ## Run the whole ELT job through Dagster (same as clicking Materialize all)
 	mkdir -p orchestration/.dagster_home

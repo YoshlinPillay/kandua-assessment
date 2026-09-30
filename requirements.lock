@@ -94,6 +94,7 @@ pydantic==2.13.5
 pydantic_core==2.46.5
 pydbml==1.2.1
 Pygments==2.21.0
+PyJWT==2.15.1
 pyparsing==3.3.3
 pytest==9.1.1
 python-dateutil==2.9.0.post0

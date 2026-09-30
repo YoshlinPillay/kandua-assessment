@@ -9,6 +9,7 @@ dependencies = [
     "dbt-postgres>=1.9,<2",
     "pandas>=2.2",
     "requests>=2.32",
+    "pyjwt>=2.9",
     "dagster>=1.9",
     "dagster-webserver>=1.9",
     "dagster-dlt>=0.25",
