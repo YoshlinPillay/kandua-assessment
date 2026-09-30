@@ -36,5 +36,38 @@ jobs:
       - name: Lint (ruff, sqlfluff) + Claude hook tests
         run: make lint
 
-  # Added in P4/P5: `pipeline` job — Postgres service → dlt load → dbt build → pytest (answer cross-checks,
-  # ERM drift, semantic parity).
+  pipeline:
+    name: ELT + data tests (compose Postgres → dlt → dbt build → pytest)
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r requirements.lock
+          .venv/bin/pip install -e ".[dev]" --no-deps
+
+      - name: Ephemeral .env (CI-only passwords for a throwaway database)
+        run: |
+          cp .env.example .env
+          sed -i "s/^POSTGRES_ADMIN_PASSWORD=.*/POSTGRES_ADMIN_PASSWORD=ci_admin_${{ github.run_id }}/" .env
+          sed -i "s/^POSTGRES_READER_PASSWORD=.*/POSTGRES_READER_PASSWORD=ci_reader_${{ github.run_id }}/" .env
+
+      - name: Start Postgres (same compose file as local)
+        run: docker compose up -d --wait postgres
+
+      - name: dlt load + dbt build (models, seeds, tests)
+        run: make pipeline
+
+      - name: pytest (ERM drift vs live DB, reader role, answer cross-checks)
+        run: make test
+
+      - name: Dagster definitions load and the job runs
+        run: make dagster-run

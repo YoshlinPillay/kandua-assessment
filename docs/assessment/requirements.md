@@ -7,10 +7,10 @@ Status: ☐ todo · ◐ in progress · ☑ done (verified).
 | # | Requirement | Where | Status |
 |---|---|---|---|
 | 01 | Agent setup and guardrails (instructions, skills, agents, hooks, deterministic checks) | `CLAUDE.md`, `.claude/`, `docs/conventions/`, `.pre-commit-config.yaml`, `.github/workflows/ci.yml` | ◐ |
-| 02 | ERM from the UML (diagram as code) | `docs/erm/transactional.dbml`, `docs/erm/README.md` | ◐ (awaiting approval) |
-| 03 | Implement tables in an open-source SQL DB, running locally with minimal effort | `docker-compose.yml`, `transform/models/core/` | ☐ |
+| 02 | ERM from the UML (diagram as code) | `docs/erm/transactional.dbml`, `docs/erm/README.md` | ☑ (approved; drift-tested) |
+| 03 | Implement tables in an open-source SQL DB, running locally with minimal effort | `docker-compose.yml`, `transform/models/core/` | ☑ (dbt build green, live drift test) |
 | 03+ | Optional cloud deploy | `infra/terraform/`, `.github/workflows/deploy.yml` | ☐ |
-| 04 | Explore the raw files and load them with an ELT tool | `docs/data_profile.md`, `ingestion/` | ◐ (profiled) |
+| 04 | Explore the raw files and load them with an ELT tool | `docs/data_profile.md`, `ingestion/`, `orchestration/` | ☑ (dlt load via Dagster, counts asserted) |
 | 05 Q1 | Most-drunk beverage type | `transform/analyses/q1_*.sql` | ☐ |
 | 05 Q2 | Most-visited bar | `transform/analyses/q2_*.sql` | ☐ |
 | 05 Q3 | Favourite beer brand | `transform/analyses/q3_*.sql` | ☐ |

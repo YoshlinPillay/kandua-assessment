@@ -1,0 +1,4 @@
+# Dagster instance config. Run history lives on local disk (a named volume in compose). That's fine for a
+# single-node deployment; a multi-node setup would point storage at Postgres.
+telemetry:
+  enabled: false

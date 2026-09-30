@@ -44,11 +44,15 @@ def juan_drive_source():
 
 
 def postgres_credentials() -> str:
+    """Build the connection string from env. Defaults are non-secret so importing never fails
+    (Dagster loads definitions without a DB); a real load still needs the password from .env/SSM."""
     env = os.environ
-    return (
-        f"postgresql://{env['POSTGRES_ADMIN_USER']}:{env['POSTGRES_ADMIN_PASSWORD']}"
-        f"@{env.get('POSTGRES_HOST', 'localhost')}:{env.get('POSTGRES_PORT', '5433')}/{env['POSTGRES_DB']}"
-    )
+    user = env.get("POSTGRES_ADMIN_USER", "juan_admin")
+    password = env.get("POSTGRES_ADMIN_PASSWORD", "")
+    host = env.get("POSTGRES_HOST", "localhost")
+    port = env.get("POSTGRES_PORT", "5433")
+    db = env.get("POSTGRES_DB", "juan")
+    return f"postgresql://{user}:{password}@{host}:{port}/{db}"
 
 
 def build_pipeline() -> dlt.Pipeline:

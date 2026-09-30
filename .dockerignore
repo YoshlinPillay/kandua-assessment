@@ -1,0 +1,12 @@
+.venv
+.git
+data
+**/__pycache__
+transform/target
+transform/dbt_packages
+transform/logs
+orchestration/.dagster_home
+.env
+.env.*
+!.env.example
+docs/assessment/*.pdf

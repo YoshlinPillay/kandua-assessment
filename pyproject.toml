@@ -9,6 +9,10 @@ dependencies = [
     "dbt-postgres>=1.9,<2",
     "pandas>=2.2",
     "requests>=2.32",
+    "dagster>=1.9",
+    "dagster-webserver>=1.9",
+    "dagster-dlt>=0.25",
+    "dagster-dbt>=0.25",
 ]
 
 [project.optional-dependencies]
