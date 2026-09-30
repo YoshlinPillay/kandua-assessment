@@ -16,6 +16,9 @@ the human.
 | D-007 | 2026-09-30 | Keep 7 identical-except-uuid event pairs | Drop one of each pair | Distinct source ids. Same-day repeats are common (129 bar-days have more than one event). | Human |
 | D-008 | 2026-09-30 | Tiger's Milk Lager = beer, 1.2 units, assumed (seed with `is_assumed`) | Exclude from unit-based answers | A lager is a beer, and every catalog beer is 1.2 units. | Human |
 | D-009 | 2026-09-30 | Surrogate keys. Barcode non-unique. Shared bar address kept and flagged. | Null out Don Julio's barcode | Don't silently change source data. Warn-level tests keep the collision visible. | Human |
+| D-010 | 2026-09-30 | Beverage inheritance mapped to a `beverage_type` lookup table | Single table with a text discriminator; class-table inheritance (beer/tequila/whiskey tables) | The subclasses have no own attributes, so subtype tables would be empty 1:1 extensions. A lookup table keeps the type names in one place (3NF) and adding a type is a row, not a migration. | Agent proposed, pending human approval |
+| D-011 | 2026-09-30 | Drink→stock same-bar invariant as a dbt test, not a composite FK | Carry `bar_id` on `drink` with composite FKs to `visit` and `stock` | A composite FK needs a transitive dependency (drink→visit→bar), which breaks 3NF. The test gives the same guarantee for a batch-loaded model. | Agent proposed, pending human approval |
+| D-012 | 2026-09-30 | `Juan` generalized to a `drinker` table | No table (implicit single user) | The UML has Juan as a class with a 0..* association. A one-row table keeps the FK explicit and lets the app support more users. | Agent proposed, pending human approval |
 
 ## Interpretation decisions (Q1–Q7)
 _Filled in during P5. Each entry lists the options with the number each produces and the option the human chose._

@@ -1,0 +1,65 @@
+// Juan the Drinker: transactional (OLTP) model, 3NF.
+// Source of truth for dbt schema `core` (CLAUDE.md rule 3). CI checks drift: tests/test_erm_drift.py
+// Render: paste into https://dbdiagram.io or see docs/erm/README.md (Mermaid).
+
+Project juan_the_drinker {
+  database_type: 'PostgreSQL'
+  Note: 'Implements the UML from the brief. Deviations are documented in docs/erm/README.md.'
+}
+
+Table core.drinker {
+  drinker_id text [pk, note: 'surrogate: md5(name)']
+  name text [not null, unique]
+  Note: 'UML class "Juan". Generalized so the app can hold more than one drinker. The data has exactly one (Juan).'
+}
+
+Table core.bar {
+  bar_id text [pk, note: 'surrogate: md5(name)']
+  name text [not null, unique]
+  address text [not null, note: 'not unique: Jerry\'s and Fat Cactus share 5 Park Rd (flagged by a warn-level test)']
+}
+
+Table core.beverage_type {
+  beverage_type_id text [pk, note: 'surrogate: md5(name)']
+  name text [not null, unique, note: 'beer | tequila | whiskey']
+  Note: 'Maps the UML generalization Beverage <|- Beer/Tequila/Whiskey. The subclasses have no own attributes, so a lookup table replaces class-table inheritance (see docs/decisions.md D-010).'
+}
+
+Table core.beverage {
+  beverage_id text [pk, note: 'surrogate: md5(name)']
+  beverage_type_id text [not null, ref: > core.beverage_type.beverage_type_id]
+  name text [not null, unique]
+  barcode text [null, note: 'NOT unique in source (Jose Cuervo = Don Julio = 24199034); null for assumed rows; text keeps leading zeros']
+  alcohol_units numeric(6,2) [not null, note: 'units per serving']
+  is_assumed boolean [not null, default: false, note: 'true = not in source catalog, added by decision D-008 (Tiger\'s Milk Lager)']
+}
+
+Table core.stock {
+  stock_id text [pk, note: 'surrogate: md5(bar name, beverage name)']
+  bar_id text [not null, ref: > core.bar.bar_id]
+  beverage_id text [not null, ref: > core.beverage.beverage_id]
+  price numeric(10,2) [not null, note: 'full (non happy hour) price per serving, ZAR']
+  indexes {
+    (bar_id, beverage_id) [unique]
+  }
+  Note: 'UML association class between Bar (offers 1..*) and Beverage (offeredBy 0..*).'
+}
+
+Table core.visit {
+  visit_id uuid [pk, note: 'source event uuid (decision D-006: one event = one visit)']
+  drinker_id text [not null, ref: > core.drinker.drinker_id]
+  bar_id text [not null, ref: > core.bar.bar_id]
+  visited_on date [not null, note: 'UML says DateTime; the source only has a date']
+}
+
+Table core.drink {
+  drink_id text [pk, note: 'surrogate: md5(visit_id, stock_id)']
+  visit_id uuid [not null, ref: > core.visit.visit_id]
+  stock_id text [not null, ref: > core.stock.stock_id]
+  quantity integer [not null, note: 'servings, > 0']
+  is_happy_hour boolean [not null]
+  indexes {
+    (visit_id, stock_id) [unique]
+  }
+  Note: 'Invariant not expressible as a plain FK: stock.bar_id = visit.bar_id (dbt test drink_stock_matches_visit_bar).'
+}

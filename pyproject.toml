@@ -19,7 +19,15 @@ dev = [
     "sqlfluff>=3.2",
     "sqlfluff-templater-dbt>=3.2",
     "pre-commit>=4",
+    "pydbml>=1.1",
 ]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["ingestion*", "orchestration*", "chat*"]
 
 [tool.ruff]
 line-length = 110
