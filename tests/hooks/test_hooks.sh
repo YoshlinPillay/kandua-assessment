@@ -50,5 +50,14 @@ check block guard_bash.sh "$(bash_cmd 'aws rds delete-db-instance --db-instance-
 check allow guard_bash.sh "$(bash_cmd 'aws sts get-caller-identity')"
 check allow guard_bash.sh "$(bash_cmd 'make dbt ARGS="build"')"
 
+# lint_changed.sh must reject badly styled SQL and accept a clean model (skipped if the venv isn't built)
+if [[ -x "$root/.venv/bin/sqlfluff" ]]; then
+  bad="$root/transform/models/_hooktest_bad.sql"
+  printf 'SELECT A,B FROM foo\n' > "$bad"
+  check block lint_changed.sh "$(file transform/models/_hooktest_bad.sql)"
+  rm -f "$bad"
+  check allow lint_changed.sh "$(file transform/models/core/drink.sql)"
+fi
+
 if [[ $fails -gt 0 ]]; then echo "$fails hook test(s) failed"; exit 1; fi
 echo "all hook tests passed"

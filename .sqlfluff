@@ -1,12 +1,14 @@
 [sqlfluff]
 dialect = postgres
-templater = dbt
+# Jinja templater (not dbt) so linting needs no database connection: pre-commit and CI lint offline.
+# dbt builtins (ref, source, config, var) are stubbed by sqlfluff. dbt_utils is stubbed in transform/.sqlfluff_libs.
+templater = jinja
 max_line_length = 110
 exclude_rules = ST06
 
-[sqlfluff:templater:dbt]
-project_dir = transform
-profiles_dir = transform
+[sqlfluff:templater:jinja]
+apply_dbt_builtins = True
+library_path = transform/.sqlfluff_libs
 
 [sqlfluff:indentation]
 tab_space_size = 4
@@ -22,3 +24,7 @@ extended_capitalisation_policy = lower
 
 [sqlfluff:rules:convention.terminator]
 multiline_newline = false
+
+[sqlfluff:rules:references.keywords]
+# `name` is a column in the ERM (bar.name, beverage.name). It's non-reserved in Postgres.
+ignore_words = name

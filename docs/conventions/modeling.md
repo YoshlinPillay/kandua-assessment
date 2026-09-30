@@ -15,7 +15,8 @@
   - Keys must be **deterministic across runs**. Use the source's id when it provides a stable one, otherwise
     `dbt_utils.generate_surrogate_key(<natural key cols>)`. `row_number()` keys are not allowed because they
     change when the input changes.
-  - Natural keys (e.g. beverage `barcode`) always carry a `UNIQUE` constraint.
+  - Natural keys (e.g. `bar.name`, `beverage.name`) carry a `UNIQUE` constraint, unless the profile shows real
+    collisions in the source (e.g. `beverage.barcode`, D-009). In that case keep the column and add a warn-level test.
 - Foreign key column = referenced table's PK name (`visit.bar_id → bar.bar_id`).
 - Booleans start with `is_`/`has_` (`is_happy_hour`). Timestamps end with `_at` (`visited_at`, UTC, `timestamptz`).
   Dates end with `_on` or `_date`.

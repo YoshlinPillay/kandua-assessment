@@ -1,0 +1,58 @@
+version: 2
+
+models:
+  - name: stg_juan__bars
+    description: One row per bar from bars.json, trimmed.
+    columns:
+      - name: bar_name
+        data_tests: [unique, not_null]
+      - name: address
+        data_tests: [not_null]
+
+  - name: stg_juan__bar_stock
+    description: One row per (bar, beverage) price-list line from bars.json → stock[].
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments: {combination_of_columns: [bar_name, beverage_name]}
+    columns:
+      - name: price
+        data_tests: [not_null]
+      - name: beverage_name
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('stg_juan__beverages'), field: beverage_name}
+
+  - name: stg_juan__beverages
+    description: Beverage catalog (beers.json) plus human-approved supplement rows (is_assumed).
+    columns:
+      - name: beverage_name
+        data_tests: [unique, not_null]
+      - name: beverage_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments: {values: [beer, tequila, whiskey]}
+      - name: alcohol_units
+        data_tests: [not_null]
+
+  - name: stg_juan__visit_events
+    description: One row per visit event (= one visit, D-006). Drink fields are null together for no-drink visits.
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "(beverage_name is null) = (quantity is null) and (quantity is null) = (is_happy_hour is null)"
+    columns:
+      - name: visit_id
+        data_tests: [unique, not_null]
+      - name: bar_name
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('stg_juan__bars'), field: bar_name}
+      - name: visited_on
+        data_tests: [not_null]
+      - name: beverage_name
+        data_tests:
+          - relationships:
+              arguments: {to: ref('stg_juan__beverages'), field: beverage_name}

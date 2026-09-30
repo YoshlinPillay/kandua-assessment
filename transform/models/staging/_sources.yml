@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: juan_raw
+    description: Raw JSON files from the Kandua Google Drive folder, loaded as-is by dlt (ingestion/pipeline.py).
+    schema: raw
+    tables:
+      - name: bars
+        description: bars.json, one row per bar. The nested stock array is unnested by dlt into bars__stock.
+      - name: bars__stock
+        description: bars.json → stock[]. Links to bars via _dlt_parent_id = bars._dlt_id.
+      - name: beverages
+        description: beers.json, the beverage catalog for every type (beer, tequila, whiskey).
+      - name: visit_events
+        description: visit_events.json, one row per visit event (decision D-006).

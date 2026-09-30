@@ -2,7 +2,11 @@ SHELL := /bin/bash
 VENV  := .venv
 BIN   := $(VENV)/bin
 
-.PHONY: help venv fetch-raw lint test test-hooks dbt
+# Load .env (if present) and export it to every recipe, so dlt, dbt and pytest see the same settings.
+-include .env
+export
+
+.PHONY: help venv up down fetch-raw load pipeline lint test test-hooks dbt
 
 help:  ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
@@ -12,8 +16,21 @@ venv:  ## Create the local Python env with dev tooling
 	$(BIN)/pip install -q --upgrade pip
 	$(BIN)/pip install -q -e ".[dev]"
 
+up:  ## Start the local stack (needs .env)
+	docker compose up -d --wait
+
+down:  ## Stop the local stack (keeps data volumes)
+	docker compose down
+
 fetch-raw:  ## Download the raw JSON files from Google Drive into data/raw (gitignored)
 	$(BIN)/python -m ingestion.drive_files
+
+load:  ## dlt: Google Drive JSON -> Postgres raw schema
+	$(BIN)/python -m ingestion.pipeline
+
+pipeline: load  ## Full ELT: dlt load, then dbt deps + build (models, seeds, tests)
+	$(MAKE) dbt ARGS="deps --quiet"
+	$(MAKE) dbt ARGS="build"
 
 lint:  ## ruff + sqlfluff + hook tests
 	$(BIN)/ruff check .

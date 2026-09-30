@@ -1,0 +1,29 @@
+name: juan
+version: "1.0.0"
+config-version: 2
+profile: juan
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+macro-paths: ["macros"]
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  juan:
+    staging:
+      +schema: staging
+      +materialized: view
+    core:
+      +schema: core
+      +materialized: table
+      +contract:
+        enforced: true
+    marts:
+      +schema: marts
+      +materialized: table
+
+seeds:
+  juan:
+    +schema: staging

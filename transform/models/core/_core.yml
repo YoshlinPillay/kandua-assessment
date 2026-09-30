@@ -1,0 +1,189 @@
+version: 2
+
+# Transactional model (3NF). Implements docs/erm/transactional.dbml. Contracts are enforced, so Postgres
+# creates the PK / FK / UNIQUE / NOT NULL / CHECK constraints below. Keep this file and the DBML in sync:
+# tests/test_erm_drift.py fails CI on any difference.
+
+models:
+  - name: drinker
+    description: A person using the app. The data has exactly one (Juan).
+    columns:
+      - name: drinker_id
+        data_type: text
+        constraints: [{type: primary_key}]
+        data_tests: [unique, not_null]
+      - name: name
+        data_type: text
+        constraints: [{type: not_null}, {type: unique}]
+
+  - name: bar
+    description: A bar Juan can visit.
+    data_tests:
+      - dbt_utils.expression_is_true:
+          arguments: {expression: "length(address) > 0"}
+    columns:
+      - name: bar_id
+        data_type: text
+        constraints: [{type: primary_key}]
+        data_tests: [unique, not_null]
+      - name: name
+        data_type: text
+        constraints: [{type: not_null}, {type: unique}]
+      - name: address
+        data_type: text
+        constraints: [{type: not_null}]
+
+  - name: beverage_type
+    description: Beverage category. Maps the UML generalization Beverage → Beer/Tequila/Whiskey (D-010).
+    columns:
+      - name: beverage_type_id
+        data_type: text
+        constraints: [{type: primary_key}]
+        data_tests: [unique, not_null]
+      - name: name
+        data_type: text
+        constraints: [{type: not_null}, {type: unique}]
+        data_tests:
+          - accepted_values:
+              arguments: {values: [beer, tequila, whiskey]}
+
+  - name: beverage
+    description: A beverage product. The barcode is not unique in the source (D-009).
+    columns:
+      - name: beverage_id
+        data_type: text
+        constraints: [{type: primary_key}]
+        data_tests: [unique, not_null]
+      - name: beverage_type_id
+        data_type: text
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('beverage_type')
+            to_columns: [beverage_type_id]
+        data_tests:
+          - relationships:
+              arguments: {to: ref('beverage_type'), field: beverage_type_id}
+      - name: name
+        data_type: text
+        constraints: [{type: not_null}, {type: unique}]
+      - name: barcode
+        data_type: text
+      - name: alcohol_units
+        data_type: numeric(6,2)
+        constraints:
+          - type: not_null
+          - type: check
+            expression: "alcohol_units >= 0"
+      - name: is_assumed
+        data_type: boolean
+        constraints: [{type: not_null}]
+
+  - name: stock
+    description: A bar's price list line for one beverage (UML association class Stock).
+    constraints:
+      - type: unique
+        columns: [bar_id, beverage_id]
+    columns:
+      - name: stock_id
+        data_type: text
+        constraints: [{type: primary_key}]
+        data_tests: [unique, not_null]
+      - name: bar_id
+        data_type: text
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('bar')
+            to_columns: [bar_id]
+        data_tests:
+          - relationships:
+              arguments: {to: ref('bar'), field: bar_id}
+      - name: beverage_id
+        data_type: text
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('beverage')
+            to_columns: [beverage_id]
+        data_tests:
+          - relationships:
+              arguments: {to: ref('beverage'), field: beverage_id}
+      - name: price
+        data_type: numeric(10,2)
+        description: Full (non happy hour) price per serving, ZAR.
+        constraints:
+          - type: not_null
+          - type: check
+            expression: "price > 0"
+
+  - name: visit
+    description: One visit by a drinker to a bar on a date (one source event = one visit, D-006).
+    columns:
+      - name: visit_id
+        data_type: uuid
+        constraints: [{type: primary_key}]
+        data_tests: [unique, not_null]
+      - name: drinker_id
+        data_type: text
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('drinker')
+            to_columns: [drinker_id]
+        data_tests:
+          - relationships:
+              arguments: {to: ref('drinker'), field: drinker_id}
+      - name: bar_id
+        data_type: text
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('bar')
+            to_columns: [bar_id]
+        data_tests:
+          - relationships:
+              arguments: {to: ref('bar'), field: bar_id}
+      - name: visited_on
+        data_type: date
+        constraints: [{type: not_null}]
+
+  - name: drink
+    description: A drink line within a visit, pointing at the bar's stock line (UML Drink → Stock).
+    constraints:
+      - type: unique
+        columns: [visit_id, stock_id, is_happy_hour]
+    columns:
+      - name: drink_id
+        data_type: text
+        constraints: [{type: primary_key}]
+        data_tests: [unique, not_null]
+      - name: visit_id
+        data_type: uuid
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('visit')
+            to_columns: [visit_id]
+        data_tests:
+          - relationships:
+              arguments: {to: ref('visit'), field: visit_id}
+      - name: stock_id
+        data_type: text
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            to: ref('stock')
+            to_columns: [stock_id]
+        data_tests:
+          - relationships:
+              arguments: {to: ref('stock'), field: stock_id}
+      - name: quantity
+        data_type: integer
+        constraints:
+          - type: not_null
+          - type: check
+            expression: "quantity > 0"
+      - name: is_happy_hour
+        data_type: boolean
+        constraints: [{type: not_null}]

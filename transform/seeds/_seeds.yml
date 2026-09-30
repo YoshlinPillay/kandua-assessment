@@ -1,0 +1,16 @@
+version: 2
+
+seeds:
+  - name: seed_drinkers
+    description: >
+      Drinkers of the app. The source data has no drinker attribute. The brief says all data is about Juan,
+      so this seed holds one row (decision C7 / D-012).
+    config:
+      column_types: {name: text}
+
+  - name: seed_beverage_catalog_supplement
+    description: >
+      Beverages that are stocked and drunk but missing from the source catalog (beers.json). Every row is an
+      assumption made by the human and flagged with is_assumed = true (decision C3 / D-008).
+    config:
+      column_types: {name: text, codebar: text, type: text, alcohol_units: numeric, is_assumed: boolean}

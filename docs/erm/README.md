@@ -48,7 +48,7 @@ erDiagram
     }
     drink {
         text drink_id PK
-        uuid visit_id FK "UK(visit_id, stock_id)"
+        uuid visit_id FK "UK(visit_id, stock_id, is_happy_hour)"
         text stock_id FK
         int quantity
         boolean is_happy_hour

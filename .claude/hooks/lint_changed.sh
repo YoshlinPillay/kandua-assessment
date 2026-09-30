@@ -19,7 +19,7 @@ run() {  # run <tool> <args...> — report failures back to the agent
 
 case "$rel" in
   transform/*.sql)
-    [[ -x "$bin/sqlfluff" ]] && cd "$root/transform" && run "$bin/sqlfluff" lint "$path" --nofail-on-unparsable ;;
+    [[ -x "$bin/sqlfluff" ]] && cd "$root/transform" && run "$bin/sqlfluff" lint "$path" ;;
   transform/*.yml|transform/*.yaml)
     [[ -x "$bin/dbt" ]] && cd "$root/transform" && run "$bin/dbt" parse --quiet ;;
   *.py)

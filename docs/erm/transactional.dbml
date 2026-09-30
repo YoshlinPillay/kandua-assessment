@@ -8,7 +8,7 @@ Project juan_the_drinker {
 }
 
 Table core.drinker {
-  drinker_id text [pk, note: 'surrogate: md5(name)']
+  drinker_id text [pk, note: 'surrogate: md5(name); row comes from seed drinker.csv (C7)']
   name text [not null, unique]
   Note: 'UML class "Juan". Generalized so the app can hold more than one drinker. The data has exactly one (Juan).'
 }
@@ -16,7 +16,7 @@ Table core.drinker {
 Table core.bar {
   bar_id text [pk, note: 'surrogate: md5(name)']
   name text [not null, unique]
-  address text [not null, note: 'not unique: Jerry\'s and Fat Cactus share 5 Park Rd (flagged by a warn-level test)']
+  address text [not null, note: 'not unique: Jerry\'s (5 Park Rd) and Fat Cactus (5 Park Road) share an address; warn-level test compares normalised addresses']
 }
 
 Table core.beverage_type {
@@ -53,13 +53,13 @@ Table core.visit {
 }
 
 Table core.drink {
-  drink_id text [pk, note: 'surrogate: md5(visit_id, stock_id)']
+  drink_id text [pk, note: 'surrogate: md5(visit_id, stock_id, is_happy_hour)']
   visit_id uuid [not null, ref: > core.visit.visit_id]
   stock_id text [not null, ref: > core.stock.stock_id]
   quantity integer [not null, note: 'servings, > 0']
   is_happy_hour boolean [not null]
   indexes {
-    (visit_id, stock_id) [unique]
+    (visit_id, stock_id, is_happy_hour) [unique]
   }
   Note: 'Invariant not expressible as a plain FK: stock.bar_id = visit.bar_id (dbt test drink_stock_matches_visit_bar).'
 }
