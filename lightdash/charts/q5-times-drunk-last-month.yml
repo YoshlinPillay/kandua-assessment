@@ -1,0 +1,22 @@
+version: 1
+contentType: chart
+name: Q5 · Times drunk in the last month
+slug: q5-times-drunk-last-month
+description: 'Q5: days with ≥14 units in the last 30 days of data (D-014, D-015). Metric fct_daily_consumption.drunk_days_last_30_days.'
+spaceSlug: juan-the-drinker
+tableName: fct_daily_consumption
+metricQuery:
+  exploreName: fct_daily_consumption
+  dimensions: []
+  metrics:
+  - fct_daily_consumption_drunk_days_last_30_days
+  filters: {}
+  sorts: []
+  limit: 1
+  tableCalculations: []
+chartConfig:
+  type: big_number
+  config:
+    label: Times drunk (last 30 days of data)
+    selectedField: fct_daily_consumption_drunk_days_last_30_days
+    showBigNumberLabel: true

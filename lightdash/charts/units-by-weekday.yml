@@ -1,0 +1,36 @@
+version: 1
+contentType: chart
+name: Alcohol units by weekday
+slug: units-by-weekday
+description: Which days Juan drinks most. Metric fct_drink.total_alcohol_units by weekday (Mon→Sun).
+spaceSlug: juan-the-drinker
+tableName: fct_drink
+metricQuery:
+  exploreName: fct_drink
+  dimensions:
+  - dim_date_day_name
+  - dim_date_iso_day_of_week
+  metrics:
+  - fct_drink_total_alcohol_units
+  filters: {}
+  sorts:
+  - fieldId: dim_date_iso_day_of_week
+    descending: false
+  limit: 500
+  tableCalculations: []
+chartConfig:
+  type: cartesian
+  config:
+    layout:
+      xField: dim_date_day_name
+      yField:
+      - fct_drink_total_alcohol_units
+      flipAxes: false
+    eChartsConfig:
+      series:
+      - type: bar
+        encode:
+          xRef:
+            field: dim_date_day_name
+          yRef:
+            field: fct_drink_total_alcohol_units

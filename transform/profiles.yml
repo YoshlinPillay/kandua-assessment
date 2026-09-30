@@ -11,6 +11,7 @@ juan:
       password: "{{ env_var('POSTGRES_ADMIN_PASSWORD', '') }}"
       schema: public
       threads: 4
+      sslmode: "{{ env_var('POSTGRES_SSLMODE', 'disable') }}"
     # Read-only role: used by Lightdash's warehouse connection (and anything else that only reads).
     reader:
       type: postgres
@@ -21,3 +22,5 @@ juan:
       password: "{{ env_var('POSTGRES_READER_PASSWORD', '') }}"
       schema: marts
       threads: 4
+      # Local compose Postgres has no TLS; RDS on AWS sets POSTGRES_SSLMODE=require.
+      sslmode: "{{ env_var('POSTGRES_SSLMODE', 'disable') }}"

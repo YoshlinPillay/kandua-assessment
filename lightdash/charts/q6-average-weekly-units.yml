@@ -1,0 +1,31 @@
+version: 1
+contentType: chart
+name: Q6 · Average units per week
+slug: q6-average-weekly-units
+description: 'Q6: mean weekly units vs the NHS limit of 14 (D-016). Red when over 14. Metric fct_weekly_consumption.avg_weekly_alcohol_units.'
+spaceSlug: juan-the-drinker
+tableName: fct_weekly_consumption
+metricQuery:
+  exploreName: fct_weekly_consumption
+  dimensions: []
+  metrics:
+  - fct_weekly_consumption_avg_weekly_alcohol_units
+  filters: {}
+  sorts: []
+  limit: 1
+  tableCalculations: []
+chartConfig:
+  type: big_number
+  config:
+    label: Avg units / week (NHS limit 14)
+    selectedField: fct_weekly_consumption_avg_weekly_alcohol_units
+    showBigNumberLabel: true
+    conditionalFormattings:
+    - color: '#DC2626'
+      rules:
+      - id: q6-average-weekly-units-over
+        operator: greaterThan
+        values:
+        - 14
+      target:
+        fieldId: fct_weekly_consumption_avg_weekly_alcohol_units

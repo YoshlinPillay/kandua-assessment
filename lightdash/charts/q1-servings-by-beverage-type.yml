@@ -1,0 +1,35 @@
+version: 1
+contentType: chart
+name: Q1 · Servings by beverage type
+slug: q1-servings-by-beverage-type
+description: 'Q1: beer is the most-drunk type. Metric fct_drink.total_servings (D-018). SQL: transform/analyses/q1_*.sql'
+spaceSlug: juan-the-drinker
+tableName: fct_drink
+metricQuery:
+  exploreName: fct_drink
+  dimensions:
+  - dim_beverage_beverage_type
+  metrics:
+  - fct_drink_total_servings
+  filters: {}
+  sorts:
+  - fieldId: fct_drink_total_servings
+    descending: true
+  limit: 500
+  tableCalculations: []
+chartConfig:
+  type: cartesian
+  config:
+    layout:
+      xField: dim_beverage_beverage_type
+      yField:
+      - fct_drink_total_servings
+      flipAxes: false
+    eChartsConfig:
+      series:
+      - type: bar
+        encode:
+          xRef:
+            field: dim_beverage_beverage_type
+          yRef:
+            field: fct_drink_total_servings

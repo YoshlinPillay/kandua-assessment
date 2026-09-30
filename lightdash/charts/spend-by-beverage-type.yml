@@ -1,0 +1,35 @@
+version: 1
+contentType: chart
+name: Spend by beverage type (ZAR)
+slug: spend-by-beverage-type
+description: Amount paid per beverage type. Metric fct_drink.total_spent.
+spaceSlug: juan-the-drinker
+tableName: fct_drink
+metricQuery:
+  exploreName: fct_drink
+  dimensions:
+  - dim_beverage_beverage_type
+  metrics:
+  - fct_drink_total_spent
+  filters: {}
+  sorts:
+  - fieldId: fct_drink_total_spent
+    descending: true
+  limit: 500
+  tableCalculations: []
+chartConfig:
+  type: cartesian
+  config:
+    layout:
+      xField: dim_beverage_beverage_type
+      yField:
+      - fct_drink_total_spent
+      flipAxes: false
+    eChartsConfig:
+      series:
+      - type: bar
+        encode:
+          xRef:
+            field: dim_beverage_beverage_type
+          yRef:
+            field: fct_drink_total_spent

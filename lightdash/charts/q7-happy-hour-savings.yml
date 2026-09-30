@@ -1,0 +1,22 @@
+version: 1
+contentType: chart
+name: Q7 · Happy-hour savings (ZAR)
+slug: q7-happy-hour-savings
+description: 'Q7: 50% discount, rounded per line (D-022), ZAR assumed (D-019). Metric fct_drink.happy_hour_savings.'
+spaceSlug: juan-the-drinker
+tableName: fct_drink
+metricQuery:
+  exploreName: fct_drink
+  dimensions: []
+  metrics:
+  - fct_drink_happy_hour_savings
+  filters: {}
+  sorts: []
+  limit: 1
+  tableCalculations: []
+chartConfig:
+  type: big_number
+  config:
+    label: Saved on happy hours (R)
+    selectedField: fct_drink_happy_hour_savings
+    showBigNumberLabel: true

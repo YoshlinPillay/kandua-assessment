@@ -1,0 +1,49 @@
+version: 1
+contentType: chart
+name: Weekly alcohol units vs NHS limit
+slug: weekly-units-vs-nhs-limit
+description: Units per ISO week with the NHS 14-unit guideline as a reference line (Q6 context).
+spaceSlug: juan-the-drinker
+tableName: fct_weekly_consumption
+metricQuery:
+  exploreName: fct_weekly_consumption
+  dimensions:
+  - fct_weekly_consumption_iso_week_start_week
+  metrics:
+  - fct_weekly_consumption_avg_weekly_alcohol_units
+  filters: {}
+  sorts:
+  - fieldId: fct_weekly_consumption_iso_week_start_week
+    descending: false
+  limit: 500
+  tableCalculations: []
+chartConfig:
+  type: cartesian
+  config:
+    layout:
+      xField: fct_weekly_consumption_iso_week_start_week
+      yField:
+      - fct_weekly_consumption_avg_weekly_alcohol_units
+      flipAxes: false
+    eChartsConfig:
+      series:
+      - type: line
+        encode:
+          xRef:
+            field: fct_weekly_consumption_iso_week_start_week
+          yRef:
+            field: fct_weekly_consumption_avg_weekly_alcohol_units
+        markLine:
+          symbol: none
+          lineStyle:
+            type: dashed
+            width: 2
+            color: '#DC2626'
+          label:
+            formatter: 'NHS limit: 14 units'
+          data:
+          - name: 'NHS limit: 14 units'
+            yAxis: '14'
+            lineStyle:
+              color: '#DC2626'
+            uuid: nhs-weekly-limit

@@ -1,0 +1,43 @@
+version: 1
+contentType: chart
+name: Spend and savings by bar (ZAR)
+slug: spend-by-bar
+description: Amount paid vs happy-hour savings per bar. Metrics fct_drink.total_spent, fct_drink.happy_hour_savings.
+spaceSlug: juan-the-drinker
+tableName: fct_drink
+metricQuery:
+  exploreName: fct_drink
+  dimensions:
+  - dim_bar_bar_name
+  metrics:
+  - fct_drink_total_spent
+  - fct_drink_happy_hour_savings
+  filters: {}
+  sorts:
+  - fieldId: fct_drink_total_spent
+    descending: true
+  limit: 500
+  tableCalculations: []
+chartConfig:
+  type: cartesian
+  config:
+    layout:
+      xField: dim_bar_bar_name
+      yField:
+      - fct_drink_total_spent
+      - fct_drink_happy_hour_savings
+      flipAxes: false
+    eChartsConfig:
+      series:
+      - type: bar
+        encode:
+          xRef:
+            field: dim_bar_bar_name
+          yRef:
+            field: fct_drink_total_spent
+      - type: bar
+        encode:
+          xRef:
+            field: dim_bar_bar_name
+          yRef:
+            field: fct_drink_happy_hour_savings

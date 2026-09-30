@@ -1,0 +1,22 @@
+version: 1
+contentType: chart
+name: Q4 · Visits without a drink
+slug: q4-visits-without-drink
+description: 'Q4: visits with no drink line (D-006). Metric fct_visit.visits_without_drink.'
+spaceSlug: juan-the-drinker
+tableName: fct_visit
+metricQuery:
+  exploreName: fct_visit
+  dimensions: []
+  metrics:
+  - fct_visit_visits_without_drink
+  filters: {}
+  sorts: []
+  limit: 1
+  tableCalculations: []
+chartConfig:
+  type: big_number
+  config:
+    label: Visits without a drink
+    selectedField: fct_visit_visits_without_drink
+    showBigNumberLabel: true

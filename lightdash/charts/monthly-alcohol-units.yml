@@ -1,0 +1,35 @@
+version: 1
+contentType: chart
+name: Alcohol units per month
+slug: monthly-alcohol-units
+description: Consumption trend over time. Metric fct_drink.total_alcohol_units by month.
+spaceSlug: juan-the-drinker
+tableName: fct_drink
+metricQuery:
+  exploreName: fct_drink
+  dimensions:
+  - fct_drink_date_day_month
+  metrics:
+  - fct_drink_total_alcohol_units
+  filters: {}
+  sorts:
+  - fieldId: fct_drink_date_day_month
+    descending: false
+  limit: 500
+  tableCalculations: []
+chartConfig:
+  type: cartesian
+  config:
+    layout:
+      xField: fct_drink_date_day_month
+      yField:
+      - fct_drink_total_alcohol_units
+      flipAxes: false
+    eChartsConfig:
+      series:
+      - type: line
+        encode:
+          xRef:
+            field: fct_drink_date_day_month
+          yRef:
+            field: fct_drink_total_alcohol_units

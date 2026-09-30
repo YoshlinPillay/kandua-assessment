@@ -1,0 +1,33 @@
+version: 1
+contentType: chart
+name: Happy hour vs regular servings
+slug: happy-hour-vs-regular
+description: Servings split by happy hour. Metric fct_drink.total_servings by fct_drink.is_happy_hour.
+spaceSlug: juan-the-drinker
+tableName: fct_drink
+metricQuery:
+  exploreName: fct_drink
+  dimensions:
+  - fct_drink_is_happy_hour
+  metrics:
+  - fct_drink_total_servings
+  filters: {}
+  sorts: []
+  limit: 500
+  tableCalculations: []
+chartConfig:
+  type: cartesian
+  config:
+    layout:
+      xField: fct_drink_is_happy_hour
+      yField:
+      - fct_drink_total_servings
+      flipAxes: false
+    eChartsConfig:
+      series:
+      - type: bar
+        encode:
+          xRef:
+            field: fct_drink_is_happy_hour
+          yRef:
+            field: fct_drink_total_servings

@@ -1,0 +1,44 @@
+version: 1
+contentType: chart
+name: Q3 · Beer brands by servings
+slug: q3-beer-brands
+description: 'Q3: Castle Lite is the favourite beer. Metric fct_drink.total_servings filtered to beer.'
+spaceSlug: juan-the-drinker
+tableName: fct_drink
+metricQuery:
+  exploreName: fct_drink
+  dimensions:
+  - dim_beverage_beverage_name
+  metrics:
+  - fct_drink_total_servings
+  filters:
+    dimensions:
+      id: beer-only-group
+      and:
+      - id: beer-only
+        target:
+          fieldId: dim_beverage_beverage_type
+        operator: equals
+        values:
+        - beer
+  sorts:
+  - fieldId: fct_drink_total_servings
+    descending: true
+  limit: 500
+  tableCalculations: []
+chartConfig:
+  type: cartesian
+  config:
+    layout:
+      xField: dim_beverage_beverage_name
+      yField:
+      - fct_drink_total_servings
+      flipAxes: true
+    eChartsConfig:
+      series:
+      - type: bar
+        encode:
+          xRef:
+            field: dim_beverage_beverage_name
+          yRef:
+            field: fct_drink_total_servings

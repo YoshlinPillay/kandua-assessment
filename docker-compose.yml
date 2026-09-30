@@ -131,6 +131,8 @@ services:
       DBT_TARGET: reader  # Lightdash's warehouse connection uses the read-only role (security.md)
     volumes:
       - ./transform:/app/transform
+      - ./docker/lightdash-cli/deploy.sh:/app/deploy.sh:ro
+      - ./lightdash:/app/lightdash
     depends_on:
       lightdash:
         condition: service_started

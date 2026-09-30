@@ -1,0 +1,22 @@
+version: 1
+contentType: chart
+name: Q6 · Weeks over the NHS limit
+slug: q6-weeks-over-nhs-limit
+description: 'Q6: ISO weeks with more than 14 units (87 of 90). Metric fct_weekly_consumption.weeks_over_nhs_limit.'
+spaceSlug: juan-the-drinker
+tableName: fct_weekly_consumption
+metricQuery:
+  exploreName: fct_weekly_consumption
+  dimensions: []
+  metrics:
+  - fct_weekly_consumption_weeks_over_nhs_limit
+  filters: {}
+  sorts: []
+  limit: 1
+  tableCalculations: []
+chartConfig:
+  type: big_number
+  config:
+    label: Weeks over 14 units (of 90)
+    selectedField: fct_weekly_consumption_weeks_over_nhs_limit
+    showBigNumberLabel: true

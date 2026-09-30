@@ -1,5 +1,5 @@
 # Lightdash CLI (pinned to the server version) + dbt, used to deploy the dbt project to Lightdash from code.
-FROM node:22-bookworm-slim
+FROM node:24-bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-venv \
  && rm -rf /var/lib/apt/lists/* \

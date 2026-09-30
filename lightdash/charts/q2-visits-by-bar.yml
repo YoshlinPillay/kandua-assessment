@@ -1,0 +1,35 @@
+version: 1
+contentType: chart
+name: Q2 · Visits by bar
+slug: q2-visits-by-bar
+description: 'Q2: Yours Truly 207 vs Jerry''s 206 (all visits, D-006/D-013). Metric fct_visit.visits.'
+spaceSlug: juan-the-drinker
+tableName: fct_visit
+metricQuery:
+  exploreName: fct_visit
+  dimensions:
+  - dim_bar_bar_name
+  metrics:
+  - fct_visit_visits
+  filters: {}
+  sorts:
+  - fieldId: fct_visit_visits
+    descending: true
+  limit: 500
+  tableCalculations: []
+chartConfig:
+  type: cartesian
+  config:
+    layout:
+      xField: dim_bar_bar_name
+      yField:
+      - fct_visit_visits
+      flipAxes: true
+    eChartsConfig:
+      series:
+      - type: bar
+        encode:
+          xRef:
+            field: dim_bar_bar_name
+          yRef:
+            field: fct_visit_visits

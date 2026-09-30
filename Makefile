@@ -42,7 +42,7 @@ dagster-dev:  ## Dagster UI locally on :3001 (the compose service does the same 
 	DAGSTER_HOME=$(CURDIR)/orchestration/.dagster_home $(BIN)/dagster dev -m orchestration.definitions -p 3001
 
 lightdash-deploy:  ## Deploy the dbt project (metrics in marts YAML) to Lightdash; needs LIGHTDASH_API_KEY in .env
-	docker compose --profile tools run --rm lightdash-cli deploy --create "Juan the Drinker" --target reader --profiles-dir . --project-dir .
+	docker compose --profile tools run --rm -T --entrypoint /app/deploy.sh lightdash-cli
 
 docs:  ## Re-embed the Q1–Q7 analysis SQL into docs/ANSWERS.md
 	$(BIN)/python docs/embed_sql.py
