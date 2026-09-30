@@ -128,3 +128,17 @@ def test_database_matches_dbml():
         t["pk"], t["not_null"] = frozenset(t["pk"]), frozenset(t["not_null"])
 
     assert live == dbml_schema()
+
+
+ANALYTICAL = PyDBML((ROOT / "docs/erm/analytical.dbml").read_text())
+
+
+def test_marts_match_analytical_dbml():
+    """Columns and types of the star schema must match docs/erm/analytical.dbml (reviewer finding, P5)."""
+    expected = {t.name: {c.name: _norm_type(str(c.type)) for c in t.columns} for t in ANALYTICAL.tables}
+    with connect_or_skip() as conn:
+        rows = conn.execute(PG_SCHEMA_SQL.replace("'core'", "'marts'")).fetchall()
+    live: dict = {}
+    for table, column, _nullable, dtype in rows:
+        live.setdefault(table, {})[column] = PG_TYPE_ALIASES.get(dtype, dtype)
+    assert live == expected

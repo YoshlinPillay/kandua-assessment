@@ -26,7 +26,7 @@ def run_analysis(name: str) -> list[dict]:
 def test_q1_most_consumed_beverage_type():
     rows = run_analysis("q1_most_consumed_beverage_type")
     assert {r["beverage_type"]: int(r["servings"]) for r in rows} == ref.q1_type_servings()
-    assert rows[0]["beverage_type"] == "beer" and rows[0]["servings_rank"] == 1
+    assert [r["beverage_type"] for r in rows if r["servings_rank"] == 1] == ["beer"]  # tie-safe
 
 
 def test_q2_most_visited_bar():
@@ -50,6 +50,7 @@ def test_q4_visits_without_drink():
 
 def test_q5_times_drunk_last_month():
     rows = run_analysis("q5_times_drunk_last_month")
+    assert len(rows) == ref.LAST_N_DAYS  # every day of the window, including days without drinking
     drunk_days = [r["visited_on"].isoformat() for r in rows if r["is_drunk"]]
     assert drunk_days == ref.q5_drunk_days_last_30()
     assert all(r["times_drunk"] == len(drunk_days) for r in rows)
@@ -61,10 +62,11 @@ def test_q6_nhs_weekly_units():
     assert row["weeks"] == len(weekly)
     assert row["weeks_over_limit"] == int((weekly > ref.NHS_WEEKLY_UNITS).sum())
     assert row["avg_units_per_week"] == Decimal(str(round(weekly.mean(), 2)))
+    assert row["max_units_in_a_week"] == Decimal(str(round(weekly.max(), 2)))
     assert row["exceeds_nhs_guidance"] == ("Yes" if weekly.mean() > ref.NHS_WEEKLY_UNITS else "No")
 
 
 def test_q7_happy_hour_savings():
     (row,) = run_analysis("q7_happy_hour_savings")
-    assert row["amount_saved"] == Decimal(str(ref.q7_happy_hour_savings()))
+    assert row["amount_saved"] == ref.q7_happy_hour_savings()
     assert row["amount_paid"] + row["amount_saved"] == row["full_price_value"]

@@ -2,7 +2,10 @@
 -- Interpretation (D-014, D-015):
 --   * "last month" = the last 30 days of data, ending on the latest visit date (2019-09-22).
 --   * "drunk" = a calendar day on which Σ(quantity × alcohol_units) over all visits that day ≥ 14.
--- Expected result shape: one row per day in the window with units, plus is_drunk.
+-- Expected result shape: exactly 30 rows, one per day in the window (0 units on days without drinking),
+-- with is_drunk and the window total times_drunk (0 if no day qualifies).
+
+-- grain: one row per day with at least one drink
 with daily_units as (
     select
         visit.visited_on,
@@ -14,16 +17,17 @@ with daily_units as (
     group by visit.visited_on
 ),
 
-data_end as (
-    select max(visited_on) as last_day from {{ ref('visit') }}
+-- grain: one row per day of the 30-day window ending on the last visit date
+window_days as (
+    select generate_series(max(visited_on) - 29, max(visited_on), interval '1 day')::date as visited_on
+    from {{ ref('visit') }}
 )
 
 select
-    daily_units.visited_on,
-    daily_units.alcohol_units,
-    daily_units.alcohol_units >= 14 as is_drunk,
+    window_days.visited_on,
+    coalesce(daily_units.alcohol_units, 0) as alcohol_units,
+    coalesce(daily_units.alcohol_units, 0) >= 14 as is_drunk,
     count(*) filter (where daily_units.alcohol_units >= 14) over () as times_drunk
-from daily_units
-cross join data_end
-where daily_units.visited_on > data_end.last_day - 30
-order by daily_units.visited_on
+from window_days
+left join daily_units on window_days.visited_on = daily_units.visited_on
+order by window_days.visited_on

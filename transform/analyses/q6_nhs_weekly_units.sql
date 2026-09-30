@@ -3,6 +3,8 @@
 -- drinking count as 0 (generated, not skipped). The first week is partial (data starts Wed 2018-01-03).
 -- Headline = average units per week vs 14. Supporting = share of weeks over 14.
 -- Expected result shape: one row: weeks, weeks_over_limit, avg_units_per_week, max_units_in_a_week, verdict.
+
+-- grain: one row per ISO week with at least one drink
 with weekly_units as (
     select
         date_trunc('week', visit.visited_on)::date as week_start,
@@ -14,9 +16,14 @@ with weekly_units as (
     group by 1
 ),
 
+-- grain: one row per ISO week from the first to the last *visit* (not drink), so the range doesn't depend
+-- on whether the first/last visits had drinks
 all_weeks as (
-    select generate_series(min(week_start), max(week_start), interval '1 week')::date as week_start
-    from weekly_units
+    select
+        generate_series(
+            date_trunc('week', min(visited_on)), date_trunc('week', max(visited_on)), interval '1 week'
+        )::date as week_start
+    from {{ ref('visit') }}
 ),
 
 weeks as (
@@ -27,6 +34,7 @@ weeks as (
     left join weekly_units on all_weeks.week_start = weekly_units.week_start
 )
 
+-- grain: one row (all weeks)
 select
     count(*) as weeks,
     count(*) filter (where alcohol_units > 14) as weeks_over_limit,

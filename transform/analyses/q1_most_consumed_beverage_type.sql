@@ -14,6 +14,7 @@ with drinks as (
         on beverage.beverage_type_id = beverage_type.beverage_type_id
 )
 
+-- grain: one row per beverage type
 select
     beverage_type,
     sum(quantity) as servings,

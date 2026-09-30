@@ -5,6 +5,7 @@ SQL and pandas agreeing is evidence, not an echo. If an answer changes, both sid
 """
 
 import json
+from decimal import ROUND_HALF_UP, Decimal
 from functools import cache
 
 import pandas as pd
@@ -72,6 +73,18 @@ def q6_weekly_units() -> pd.Series:
     return df.units.resample("W-SUN").sum()  # W-SUN = weeks ending Sunday = ISO Monday-start weeks
 
 
-def q7_happy_hour_savings() -> float:
+def _cents(value: Decimal) -> Decimal:
+    # Half-up to the cent (like Postgres numeric rounding). Python's round() is banker's rounding.
+    return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def q7_happy_hour_savings() -> Decimal:
+    """D-022: each happy-hour drink line's saving is rounded to the cent, like a bill, then summed."""
     hh = drink_lines().query("happy_hour == True")
-    return round(float((hh.price * hh.drinks * HAPPY_HOUR_DISCOUNT).sum()), 2)
+    return sum(
+        (
+            _cents(Decimal(str(price)) * int(drinks) * Decimal(str(HAPPY_HOUR_DISCOUNT)))
+            for price, drinks in zip(hh.price, hh.drinks, strict=True)
+        ),
+        Decimal("0"),
+    )

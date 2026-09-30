@@ -26,6 +26,8 @@ check allow guard_files.sh "$(file .env.example)"
 check block guard_files.sh "$(file infra/terraform/terraform.tfstate)"
 check block guard_files.sh "$(file data/raw/bars.json)"
 check block guard_files.sh "$(file semantic/cube/model/cubes/fct_drink.yml)"
+check allow guard_files.sh "$(file semantic/cube/model/cubes/marts.yml.jinja)"
+check allow guard_files.sh "$(file semantic/cube/model/globals.py)"
 check allow guard_files.sh "$(file transform/models/core/bar.sql)"
 check allow guard_files.sh "$(file docs/data_profile.md)"
 

@@ -3,6 +3,7 @@
 -- No join to drink: counting only visits with a drink would change the winner. The full ranking is
 -- returned because the margin is one visit.
 -- Expected result shape: one row per bar with visits and rank.
+-- grain: one row per bar
 select
     bar.name as bar_name,
     count(*) as visits,

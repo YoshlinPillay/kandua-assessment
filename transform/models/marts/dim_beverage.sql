@@ -1,5 +1,6 @@
--- Grain: one row per beverage. Deliberately denormalized: the type name is folded in from beverage_type
--- (a transitive dependency, so not 3NF; see docs/ANSWERS.md Q10) so BI never needs the extra join.
+-- Grain: one row per beverage. The type name is folded in from beverage_type so BI never needs the extra
+-- join. That's redundancy across tables (the string repeats per beverage), not a normal-form violation within
+-- this table: dim_beverage has no beverage_type_id, so the type depends directly on beverage_id (Q10).
 select
     beverage.beverage_id,
     beverage.name as beverage_name,

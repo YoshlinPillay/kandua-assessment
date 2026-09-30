@@ -11,12 +11,13 @@ with daily as (
     inner join {{ ref('dim_date') }} as dim_date on fct_daily_consumption.date_day = dim_date.date_day
 )
 
+-- grain: one row per ISO week
 select
     iso_week_start,
-    count(*) as days_covered,
-    sum(servings) as servings,
-    sum(alcohol_units) as alcohol_units,
-    count(*) filter (where is_drunk) as drunk_days,
+    cast(count(*) as integer) as days_covered,
+    cast(sum(servings) as integer) as servings,
+    cast(sum(alcohol_units) as numeric(6, 2)) as alcohol_units,
+    cast(count(*) filter (where is_drunk) as integer) as drunk_days,
     {{ var('nhs_weekly_units_limit') }} as nhs_weekly_limit,
     sum(alcohol_units) > {{ var('nhs_weekly_units_limit') }} as is_over_nhs_limit,
     count(*) < 7 as is_partial_week

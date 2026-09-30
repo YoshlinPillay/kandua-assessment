@@ -44,29 +44,29 @@ Table marts.fct_drink {
   is_happy_hour boolean
   quantity integer [note: 'additive']
   unit_price numeric(10,2) [note: 'non-additive; price at the bar']
-  alcohol_units numeric [note: 'additive: quantity x units per serving']
-  full_price_amount numeric [note: 'additive']
-  amount_paid numeric [note: 'additive']
-  amount_saved numeric [note: 'additive']
+  alcohol_units numeric(6,2) [note: 'additive: quantity x units per serving']
+  full_price_amount numeric(10,2) [note: 'additive']
+  amount_paid numeric(10,2) [note: 'additive; full - saved (D-022)']
+  amount_saved numeric(10,2) [note: 'additive; rounded per line (D-022)']
 }
 
 Table marts.fct_visit {
-  visit_id uuid [pk, note: 'grain: one visit, including visits without a drink']
+  visit_id uuid [pk, note: 'grain: one visit, including visits without a drink (transaction fact, visit grain)']
   date_day date [ref: > marts.dim_date.date_day]
   bar_id text [ref: > marts.dim_bar.bar_id]
   has_drink boolean
   drink_lines integer
   servings integer
-  alcohol_units numeric
-  amount_paid numeric
-  amount_saved numeric
+  alcohol_units numeric(6,2)
+  amount_paid numeric(10,2)
+  amount_saved numeric(10,2)
 }
 
 Table marts.fct_daily_consumption {
   date_day date [pk, ref: - marts.dim_date.date_day, note: 'grain: one day, zero days included']
   visits integer
   servings integer
-  alcohol_units numeric
+  alcohol_units numeric(6,2)
   is_drunk boolean [note: 'units >= 14 (D-015)']
   is_in_last_30_days_of_data boolean [note: 'Q5 window (D-014)']
 }
@@ -75,7 +75,7 @@ Table marts.fct_weekly_consumption {
   iso_week_start date [pk, note: 'grain: one ISO week, zero weeks included']
   days_covered integer
   servings integer
-  alcohol_units numeric
+  alcohol_units numeric(6,2)
   drunk_days integer
   nhs_weekly_limit integer
   is_over_nhs_limit boolean

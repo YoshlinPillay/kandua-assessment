@@ -17,8 +17,10 @@ case "$rel" in
     block "Terraform state must never be edited by hand." ;;
   data/raw/*)
     block "raw data is immutable (CLAUDE.md rule 2). Fix it in dbt staging instead." ;;
-  semantic/cube/model/*)
-    block "Cube models are generated from dbt YAML (CLAUDE.md rule 4). Edit transform/models/marts/*.yml and run 'make cube'." ;;
+  semantic/cube/model/*.yml|semantic/cube/model/*.yaml)
+    # Static cube files would be hand-written metrics. Cubes are generated at runtime from the dbt manifest by
+    # the generic template (model/cubes/*.yml.jinja + model/globals.py), which is allowed.
+    block "Cube metrics come from dbt YAML meta (CLAUDE.md rule 4). Edit transform/models/marts/*.yml instead." ;;
   *secrets.toml)
     block "dlt secrets are human-managed. Use env vars / .env." ;;
 esac

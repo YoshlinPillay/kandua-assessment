@@ -54,6 +54,96 @@ services:
       dagster-webserver:
         condition: service_started
 
+  # --- Semantic layer + BI -----------------------------------------------------------------------------------
+  lightdash-db:  # Lightdash's own metadata store (needs pgvector); separate from the warehouse
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lightdash
+      POSTGRES_USER: lightdash
+      POSTGRES_PASSWORD: ${LIGHTDASH_DB_PASSWORD}
+    volumes:
+      - lightdash_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lightdash -d lightdash"]
+      interval: 5s
+      retries: 10
+
+  minio:  # S3-compatible store Lightdash uses for query results/exports. Internal only (host :9000 is taken).
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: ["server", "/data"]
+    environment:
+      MINIO_ROOT_USER: lightdash
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+
+  minio-init:  # one-shot: create the bucket Lightdash writes to
+    image: minio/mc:latest
+    depends_on: [minio]
+    entrypoint: >
+      sh -c "until mc alias set local http://minio:9000 lightdash $$MINIO_ROOT_PASSWORD; do sleep 2; done
+      && mc mb --ignore-existing local/lightdash"
+    environment:
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+
+  lightdash:
+    image: lightdash/lightdash:latest
+    platform: linux/amd64
+    restart: unless-stopped
+    depends_on:
+      lightdash-db:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      PGHOST: lightdash-db
+      PGPORT: "5432"
+      PGUSER: lightdash
+      PGPASSWORD: ${LIGHTDASH_DB_PASSWORD}
+      PGDATABASE: lightdash
+      LIGHTDASH_SECRET: ${LIGHTDASH_SECRET}
+      SITE_URL: ${LIGHTDASH_SITE_URL:-http://localhost:8100}
+      PORT: "8080"
+      SECURE_COOKIES: "false"
+      TRUST_PROXY: "false"
+      LIGHTDASH_INSTALL_TYPE: docker_image
+      LIGHTDASH_MIGRATION_EXECUTION_MODE: compose
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: lightdash
+      S3_ACCESS_KEY: lightdash
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      S3_FORCE_PATH_STYLE: "true"
+      SCHEDULER_ENABLED: "false"  # no headless browser: scheduled image deliveries are out of scope
+    ports:
+      - "8100:8080"
+
+  cube:
+    image: cubejs/cube:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      CUBEJS_DB_TYPE: postgres
+      CUBEJS_DB_HOST: postgres
+      CUBEJS_DB_PORT: "5432"
+      CUBEJS_DB_NAME: ${POSTGRES_DB}
+      CUBEJS_DB_USER: ${POSTGRES_READER_USER}  # read-only role (security.md)
+      CUBEJS_DB_PASS: ${POSTGRES_READER_PASSWORD}
+      CUBEJS_API_SECRET: ${CUBEJS_API_SECRET}
+      CUBEJS_DEV_MODE: "true"  # local playground on :4000; disabled on AWS
+      DBT_MANIFEST_PATH: /cube/dbt/manifest.json
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./semantic/cube:/cube/conf
+      - ./transform/target/manifest.json:/cube/dbt/manifest.json:ro
+
 volumes:
   pgdata:
   dagster_home:
+  lightdash_db:
+  minio_data:

@@ -20,8 +20,8 @@ and every number. Your job is to propose, implement and verify. Never decide sil
 | Orchestration | Dagster (`dagster-dlt`, `dagster-dbt`) | `orchestration/` |
 | Semantic layer | Metrics in dbt YAML `meta` → Lightdash; Cube models **generated** via `cube_dbt` | `transform/models/marts/*.yml`, `semantic/cube/` |
 | BI | Lightdash (charts as code) | `lightdash/` |
-| Conversational | Streamlit + Claude tool-use over Cube REST API | `chat/` |
-| Cloud | AWS: RDS + one EC2 via Terraform, deployed by GitHub Actions OIDC | `infra/terraform/`, `.github/workflows/` |
+| Conversational | Streamlit + Amazon Bedrock Converse API (tool use over Cube REST API). Model chosen by golden-question bake-off (D-020) | `chat/` |
+| Cloud | AWS: RDS + one EC2 in **af-south-1** via Terraform, Bedrock in **us-east-1** (D-021), deployed by GitHub Actions OIDC | `infra/terraform/`, `.github/workflows/` |
 
 ## Hard rules
 1. **Profile before modeling.** Never assume the shape, types, keys or cleanliness of raw data. Claims about
@@ -30,8 +30,9 @@ and every number. Your job is to propose, implement and verify. Never decide sil
    and are documented in `docs/data_profile.md` under "Cleaning decisions".
 3. **The ERM is the source of truth.** `docs/erm/transactional.dbml` defines the `core` schema. When one
    changes, change the other in the same commit. CI fails on drift (`tests/test_erm_drift.py`).
-4. **Metrics are defined exactly once**, in dbt YAML `meta` on mart models. Never hand-write a metric in
-   Cube, Lightdash or the chat app. Cube files in `semantic/cube/` are generated. Do not edit them by hand.
+4. **Metrics are defined exactly once**, in dbt YAML `meta` on mart models (Lightdash format). Never hand-write a
+   metric in Cube, Lightdash or the chat app. Cube builds its cubes **at runtime** from the dbt manifest via the
+   generic template in `semantic/cube/model/`. Static cube `.yml` files are blocked by a hook.
 5. **Every number must be traceable.** Every answer (Q1–Q7) has a SQL file in `transform/analyses/`, an
    independent pandas recomputation in `tests/`, and a dashboard tile backed by a dbt metric.
 6. **Interpretation calls belong to the human.** Examples: what "drunk", "last month" or "alcoholic" means,

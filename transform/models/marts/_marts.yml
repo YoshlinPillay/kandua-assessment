@@ -25,6 +25,8 @@ models:
     columns:
       - name: beverage_id
         data_tests: [unique, not_null]
+      - name: beverage_name
+        data_tests: [unique, not_null]
       - name: beverage_type
         data_tests:
           - not_null
@@ -43,10 +45,12 @@ models:
               arguments: {to: ref('dim_date'), field: date_day}
       - name: bar_id
         data_tests:
+          - not_null
           - relationships:
               arguments: {to: ref('dim_bar'), field: bar_id}
       - name: beverage_id
         data_tests:
+          - not_null
           - relationships:
               arguments: {to: ref('dim_beverage'), field: beverage_id}
       - name: quantity
@@ -61,16 +65,18 @@ models:
         description: full_price_amount − amount_paid.
 
   - name: fct_visit
-    description: Accumulating fact. One row per visit (including visits without a drink), with drink measures rolled up.
+    description: Transaction fact at visit grain. One row per visit (including visits without a drink), with drink measures rolled up.
     columns:
       - name: visit_id
         data_tests: [unique, not_null]
       - name: date_day
         data_tests:
+          - not_null
           - relationships:
               arguments: {to: ref('dim_date'), field: date_day}
       - name: bar_id
         data_tests:
+          - not_null
           - relationships:
               arguments: {to: ref('dim_bar'), field: bar_id}
 

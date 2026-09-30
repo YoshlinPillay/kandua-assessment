@@ -3,6 +3,8 @@ Q1–Q7 answer, computed here from marts and compared with the independent panda
 
 from decimal import Decimal
 
+import pandas as pd
+
 from tests.answers import reference as ref
 from tests.warehouse import connect_or_skip
 
@@ -49,6 +51,15 @@ def test_q5_from_marts():
     assert [r[0] for r in rows] == ref.q5_drunk_days_last_30()
 
 
+def test_q6_weekly_series_from_marts():
+    """Week-by-week, not just totals: catches a week-alignment bug that shifts units between neighbours."""
+    rows = query("select iso_week_start, alcohol_units from marts.fct_weekly_consumption order by 1")
+    weekly = ref.q6_weekly_units()
+    # pandas labels ISO weeks by their Sunday end; SQL by their Monday start
+    expected = {(end - pd.Timedelta(days=6)).date(): round(units, 2) for end, units in weekly.items()}
+    assert {week: float(units) for week, units in rows} == expected
+
+
 def test_q6_from_marts():
     ((weeks, over, avg),) = query(
         "select count(*), count(*) filter (where is_over_nhs_limit), round(avg(alcohol_units), 2) "
@@ -61,4 +72,4 @@ def test_q6_from_marts():
 
 def test_q7_from_marts():
     ((saved,),) = query("select round(sum(amount_saved), 2) from marts.fct_drink")
-    assert saved == Decimal(str(ref.q7_happy_hour_savings()))
+    assert saved == ref.q7_happy_hour_savings()
