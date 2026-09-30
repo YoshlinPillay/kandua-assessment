@@ -6,7 +6,7 @@ BIN   := $(VENV)/bin
 -include .env
 export
 
-.PHONY: help venv up down fetch-raw load pipeline dagster-run dagster-dev docs lint test test-hooks dbt
+.PHONY: help venv up down fetch-raw load pipeline dagster-run dagster-dev lightdash-deploy docs lint test test-hooks dbt
 
 help:  ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
@@ -39,6 +39,9 @@ dagster-run:  ## Run the whole ELT job through Dagster (same as clicking Materia
 dagster-dev:  ## Dagster UI locally on :3001 (the compose service does the same in a container)
 	mkdir -p orchestration/.dagster_home
 	DAGSTER_HOME=$(CURDIR)/orchestration/.dagster_home $(BIN)/dagster dev -m orchestration.definitions -p 3001
+
+lightdash-deploy:  ## Deploy the dbt project (metrics in marts YAML) to Lightdash; needs LIGHTDASH_API_KEY in .env
+	docker compose --profile tools run --rm lightdash-cli deploy --create "Juan the Drinker" --target reader --profiles-dir . --project-dir .
 
 docs:  ## Re-embed the Q1–Q7 analysis SQL into docs/ANSWERS.md
 	$(BIN)/python docs/embed_sql.py

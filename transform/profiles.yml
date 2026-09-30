@@ -11,3 +11,13 @@ juan:
       password: "{{ env_var('POSTGRES_ADMIN_PASSWORD', '') }}"
       schema: public
       threads: 4
+    # Read-only role: used by Lightdash's warehouse connection (and anything else that only reads).
+    reader:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST', 'localhost') }}"
+      port: "{{ env_var('POSTGRES_PORT', '5433') | int }}"
+      dbname: "{{ env_var('POSTGRES_DB', 'juan') }}"
+      user: "{{ env_var('POSTGRES_READER_USER', 'juan_reader') }}"
+      password: "{{ env_var('POSTGRES_READER_PASSWORD', '') }}"
+      schema: marts
+      threads: 4

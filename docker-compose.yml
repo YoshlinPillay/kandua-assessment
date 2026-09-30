@@ -117,6 +117,24 @@ services:
     ports:
       - "8100:8080"
 
+  lightdash-cli:  # one-shot tool: `make lightdash-deploy`. Not started by `docker compose up`.
+    build:
+      context: .
+      dockerfile: docker/lightdash-cli/Dockerfile
+    image: juan-lightdash-cli:local
+    profiles: [tools]
+    env_file: .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      LIGHTDASH_URL: http://lightdash:8080
+      DBT_TARGET: reader  # Lightdash's warehouse connection uses the read-only role (security.md)
+    volumes:
+      - ./transform:/app/transform
+    depends_on:
+      lightdash:
+        condition: service_started
+
   cube:
     image: cubejs/cube:latest
     restart: unless-stopped

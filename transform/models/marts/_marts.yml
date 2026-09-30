@@ -1,97 +1,304 @@
 version: 2
 
 # Analytical star schema (Q9). Implements docs/erm/analytical.dbml. Facts carry precomputed additive measures.
-# Lightdash/Cube metrics are added to these models in P6 (single semantic source, CLAUDE.md rule 4).
+#
+# SEMANTIC LAYER: this file is the single source of every business metric (CLAUDE.md rule 4). The format is
+# Lightdash's `config.meta` (metrics on columns, joins on models). Lightdash reads it natively, Cube generates
+# its cubes from the same manifest at runtime (semantic/cube/model/), and the chat app discovers metrics
+# through Cube. Metric names map to questions: q1..q7 in labels make the traceability explicit.
 
 models:
   - name: dim_date
     description: Calendar dimension, one row per day over the full years covered by the data.
     columns:
       - name: date_day
+        description: Calendar day.
         data_tests: [unique, not_null]
+        config:
+          meta:
+            dimension:
+              type: date
+              time_intervals: [DAY, WEEK, MONTH, YEAR]
       - name: iso_week_start
         description: Monday of the ISO week (NHS weekly test, D-016).
+      - name: day_name
+        description: Weekday name (Monday … Sunday).
+      - name: is_weekend
+        description: Saturday or Sunday.
 
   - name: dim_bar
     description: One row per bar.
     columns:
       - name: bar_id
         data_tests: [unique, not_null]
+        config: {meta: {dimension: {hidden: true}}}
       - name: bar_name
+        description: Bar name.
         data_tests: [unique, not_null]
+      - name: address
+        description: Street address (Cape Town).
 
   - name: dim_beverage
     description: One row per beverage, with its type folded in (denormalized on purpose, see Q10).
     columns:
       - name: beverage_id
         data_tests: [unique, not_null]
+        config: {meta: {dimension: {hidden: true}}}
       - name: beverage_name
+        description: Beverage brand (e.g. Castle Lite).
         data_tests: [unique, not_null]
       - name: beverage_type
+        description: beer | tequila | whiskey.
         data_tests:
           - not_null
           - accepted_values:
               arguments: {values: [beer, tequila, whiskey]}
+      - name: alcohol_units_per_serving
+        description: Alcohol units in one serving.
+      - name: is_assumed
+        description: True for catalog rows added by assumption (Tiger's Milk Lager, D-008).
 
   - name: fct_drink
     description: Transaction fact. One row per drink line.
+    config:
+      meta:
+        joins:
+          - join: dim_bar
+            sql_on: ${fct_drink.bar_id} = ${dim_bar.bar_id}
+            relationship: many-to-one
+          - join: dim_beverage
+            sql_on: ${fct_drink.beverage_id} = ${dim_beverage.beverage_id}
+            relationship: many-to-one
+          - join: dim_date
+            sql_on: ${fct_drink.date_day} = ${dim_date.date_day}
+            relationship: many-to-one
     columns:
       - name: drink_id
         data_tests: [unique, not_null]
+        config:
+          meta:
+            dimension: {hidden: true}
+            metrics:
+              drink_lines:
+                type: count
+                label: Drink lines
+                description: Number of drink lines (a beverage ordered on a visit).
+      - name: visit_id
+        config: {meta: {dimension: {hidden: true}}}
       - name: date_day
+        description: Day of the visit.
         data_tests:
           - not_null
           - relationships:
               arguments: {to: ref('dim_date'), field: date_day}
+        config:
+          meta:
+            dimension:
+              type: date
+              time_intervals: [DAY, WEEK, MONTH, YEAR]
       - name: bar_id
         data_tests:
           - not_null
           - relationships:
               arguments: {to: ref('dim_bar'), field: bar_id}
+        config: {meta: {dimension: {hidden: true}}}
       - name: beverage_id
         data_tests:
           - not_null
           - relationships:
               arguments: {to: ref('dim_beverage'), field: beverage_id}
+        config: {meta: {dimension: {hidden: true}}}
+      - name: is_happy_hour
+        description: Ordered during happy hour (50% off).
       - name: quantity
         description: Servings.
+        config:
+          meta:
+            metrics:
+              total_servings:
+                type: sum
+                label: Servings (Q1, Q3)
+                description: Total servings drunk. Q1 ranks beverage types by it, Q3 ranks beers (D-018).
+      - name: unit_price
+        description: Full price of one serving at the bar (ZAR).
       - name: alcohol_units
         description: quantity × alcohol units per serving.
+        config:
+          meta:
+            metrics:
+              total_alcohol_units:
+                type: sum
+                label: Alcohol units
+                description: Total alcohol units consumed.
+                round: 1
       - name: full_price_amount
         description: quantity × bar price (ZAR), before any happy-hour discount.
+        config:
+          meta:
+            metrics:
+              full_price_value:
+                type: sum
+                label: Value at full price (ZAR)
+                description: What the drinks would have cost without happy-hour discounts.
+                round: 2
       - name: amount_paid
-        description: What Juan paid. 50% of full price during happy hour (brief).
+        description: What Juan paid (ZAR). Full − saved, rounded per line (D-022).
+        config:
+          meta:
+            metrics:
+              total_spent:
+                type: sum
+                label: Amount spent (ZAR)
+                description: Money Juan actually paid.
+                round: 2
       - name: amount_saved
-        description: full_price_amount − amount_paid.
+        description: Happy-hour saving (ZAR), 50% of full price, rounded per line (D-022).
+        config:
+          meta:
+            metrics:
+              happy_hour_savings:
+                type: sum
+                label: Happy-hour savings (Q7, ZAR)
+                description: Money saved by drinking during happy hour (50% discount).
+                round: 2
 
   - name: fct_visit
     description: Transaction fact at visit grain. One row per visit (including visits without a drink), with drink measures rolled up.
+    config:
+      meta:
+        joins:
+          - join: dim_bar
+            sql_on: ${fct_visit.bar_id} = ${dim_bar.bar_id}
+            relationship: many-to-one
+          - join: dim_date
+            sql_on: ${fct_visit.date_day} = ${dim_date.date_day}
+            relationship: many-to-one
     columns:
       - name: visit_id
         data_tests: [unique, not_null]
+        config:
+          meta:
+            dimension: {hidden: true}
+            metrics:
+              visits:
+                type: count
+                label: Visits (Q2)
+                description: Number of bar visits, including visits without a drink (D-006, D-013).
+              visits_without_drink:
+                type: count
+                label: Visits without a drink (Q4)
+                description: Visits where Juan had nothing to drink.
+                filters:
+                  - has_drink: false
       - name: date_day
+        description: Day of the visit.
         data_tests:
           - not_null
           - relationships:
               arguments: {to: ref('dim_date'), field: date_day}
+        config:
+          meta:
+            dimension:
+              type: date
+              time_intervals: [DAY, WEEK, MONTH, YEAR]
       - name: bar_id
         data_tests:
           - not_null
           - relationships:
               arguments: {to: ref('dim_bar'), field: bar_id}
+        config: {meta: {dimension: {hidden: true}}}
+      - name: has_drink
+        description: The visit included at least one drink.
 
   - name: fct_daily_consumption
     description: Periodic snapshot. One row per day between the first and last day of data, zero days included.
     columns:
       - name: date_day
+        description: Calendar day.
         data_tests: [unique, not_null]
+        config:
+          meta:
+            dimension:
+              type: date
+              time_intervals: [DAY, WEEK, MONTH, YEAR]
+            metrics:
+              days:
+                type: count
+                label: Days
+                description: Number of calendar days.
+              drunk_days:
+                type: count
+                label: Drunk days
+                description: Days with ≥ 14 alcohol units across all visits (D-015).
+                filters:
+                  - is_drunk: true
+              drunk_days_last_30_days:
+                type: count
+                label: Times drunk in the last month (Q5)
+                description: Drunk days within the last 30 days of data, 2019-08-24 → 2019-09-22 (D-014, D-015).
+                filters:
+                  - is_drunk: true
+                  - is_in_last_30_days_of_data: true
+      - name: alcohol_units
+        description: Alcohol units drunk that day.
+        config:
+          meta:
+            metrics:
+              daily_alcohol_units:
+                type: sum
+                label: Alcohol units (daily fact)
+                description: Alcohol units summed over days.
+                round: 1
+              max_daily_alcohol_units:
+                type: max
+                label: Most units in a day
+                description: Highest alcohol units drunk on a single day.
+                round: 1
       - name: is_drunk
         description: Units that day ≥ var drunk_units_threshold (14), summed across all visits (D-015).
+      - name: is_in_last_30_days_of_data
+        description: Day falls in the last 30 days of data (Q5 window, D-014).
 
   - name: fct_weekly_consumption
     description: Periodic snapshot. One row per ISO week, zero weeks included (D-016).
     columns:
       - name: iso_week_start
+        description: Monday of the ISO week.
         data_tests: [unique, not_null]
+        config:
+          meta:
+            dimension:
+              type: date
+              time_intervals: [WEEK, MONTH, YEAR]
+            metrics:
+              weeks:
+                type: count
+                label: Weeks
+                description: Number of ISO weeks.
+              weeks_over_nhs_limit:
+                type: count
+                label: Weeks over the NHS limit (Q6)
+                description: ISO weeks with more than 14 alcohol units (D-016).
+                filters:
+                  - is_over_nhs_limit: true
+      - name: alcohol_units
+        description: Alcohol units drunk that week.
+        config:
+          meta:
+            metrics:
+              avg_weekly_alcohol_units:
+                type: average
+                label: Average units per week (Q6)
+                description: Mean weekly alcohol units, zero weeks included, vs the NHS limit of 14 (D-016).
+                round: 2
+              max_weekly_alcohol_units:
+                type: max
+                label: Most units in a week
+                description: Heaviest ISO week.
+                round: 1
+      - name: nhs_weekly_limit
+        description: NHS guideline, 14 units per week.
       - name: is_over_nhs_limit
         description: Weekly units > var nhs_weekly_units_limit (14).
+      - name: is_partial_week
+        description: Week not fully covered by the data (the first week).
