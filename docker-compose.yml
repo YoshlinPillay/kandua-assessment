@@ -70,23 +70,20 @@ services:
       retries: 10
 
   minio:  # S3-compatible store Lightdash uses for query results/exports. Internal only (host :9000 is taken).
-    image: minio/minio:latest
+    # Community build used by Lightdash's own compose (MinIO stopped publishing minio/minio and minio/mc).
+    image: coollabsio/minio:latest
     restart: unless-stopped
-    command: ["server", "/data"]
+    entrypoint: ["/bin/sh", "/init-minio.sh"]
     environment:
       MINIO_ROOT_USER: lightdash
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
-
-  minio-init:  # one-shot: create the bucket Lightdash writes to
-    image: minio/mc:latest
-    depends_on: [minio]
-    entrypoint: >
-      sh -c "until mc alias set local http://minio:9000 lightdash $$MINIO_ROOT_PASSWORD; do sleep 2; done
-      && mc mb --ignore-existing local/lightdash"
-    environment:
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      - ./docker/minio/init-minio.sh:/init-minio.sh:ro
+    healthcheck:
+      test: ["CMD", "mc", "ls", "local/lightdash"]
+      interval: 5s
+      retries: 20
 
   lightdash:
     image: lightdash/lightdash:latest
@@ -95,8 +92,8 @@ services:
     depends_on:
       lightdash-db:
         condition: service_healthy
-      minio-init:
-        condition: service_completed_successfully
+      minio:
+        condition: service_healthy
     environment:
       PGHOST: lightdash-db
       PGPORT: "5432"
