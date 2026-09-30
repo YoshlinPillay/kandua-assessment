@@ -1,0 +1,33 @@
+[project]
+name = "juan-the-drinker"
+version = "0.1.0"
+description = "Kandua DE assessment: ELT + semantic layer + BI + conversational analytics for Juan the Drinker"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "dlt[postgres]>=1.5",
+    "dbt-core>=1.9,<2",
+    "dbt-postgres>=1.9,<2",
+    "pandas>=2.2",
+    "requests>=2.32",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "psycopg[binary]>=3.2",
+    "ruff>=0.6",
+    "sqlfluff>=3.2",
+    "sqlfluff-templater-dbt>=3.2",
+    "pre-commit>=4",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "S"]
+ignore = ["S101"]  # asserts are fine in tests
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

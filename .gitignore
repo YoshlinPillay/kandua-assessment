@@ -1,0 +1,39 @@
+# Secrets — never commit (see docs/conventions/security.md)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Terraform state / local artefacts
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# dbt / dlt / dagster artefacts
+transform/target/
+transform/dbt_packages/
+transform/logs/
+.dlt/secrets.toml
+**/.dlt/secrets.toml
+orchestration/.dagster_home/
+*.duckdb
+
+# Local raw data cache (source of truth is the Google Drive folder)
+data/
+
+# Proprietary assessment brief — kept locally for agent context, not redistributed
+docs/assessment/*.pdf
+
+# Claude Code local-only settings
+.claude/settings.local.json
+*.egg-info/
