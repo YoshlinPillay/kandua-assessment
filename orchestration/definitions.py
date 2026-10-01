@@ -46,6 +46,10 @@ class SourceAlignedDbtTranslator(DagsterDbtTranslator):
             return dg.AssetKey([dbt_resource_props["source_name"], dbt_resource_props["name"]])
         return super().get_asset_key(dbt_resource_props)
 
+    def get_group_name(self, dbt_resource_props: Mapping[str, Any]) -> str | None:
+        # Group dbt assets by warehouse layer, so the lineage reads ingestion -> staging -> core -> marts.
+        return dbt_resource_props.get("schema") or super().get_group_name(dbt_resource_props)
+
 
 dbt_project = DbtProject(project_dir=DBT_DIR, profiles_dir=DBT_DIR)
 dbt_project.prepare_if_dev()  # `dagster dev` re-parses the manifest; images parse it at build time

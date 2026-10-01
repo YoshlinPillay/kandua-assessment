@@ -34,9 +34,21 @@ class CubeClient:
         if self._catalogue is None:
             meta = requests.get(f"{self.url}/meta", headers=self._headers(), timeout=self.timeout)
             meta.raise_for_status()
+            cubes = meta.json()["cubes"]
+            component = {c["name"]: c.get("connectedComponent") for c in cubes}
             self._catalogue = {
                 cube["name"]: {
                     "description": cube.get("description", ""),
+                    # Cubes in the same connected component join automatically: a measure here can be broken
+                    # down by their dimensions (e.g. fct_visit.visits by dim_bar.bar_name). Without this the
+                    # model concluded "there is no bar dimension on visits" (bake-off Q2, 0/3).
+                    "joinable_with": sorted(
+                        other
+                        for other, comp in component.items()
+                        if other != cube["name"]
+                        and comp is not None
+                        and comp == cube.get("connectedComponent")
+                    ),
                     "measures": {
                         m["name"]: f"{m.get('title', '')}: {m.get('description', '')}".strip(": ")
                         for m in cube.get("measures", [])
@@ -47,7 +59,7 @@ class CubeClient:
                         if d.get("public", True)
                     },
                 }
-                for cube in meta.json()["cubes"]
+                for cube in cubes
             }
         return self._catalogue
 

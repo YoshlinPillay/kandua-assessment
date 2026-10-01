@@ -12,7 +12,7 @@ block() { echo "BLOCKED by .claude/hooks/guard_bash.sh: $1. Prepare the command 
 grep -Eq 'terraform[^|;&]*[[:space:]](apply|destroy|import|state[[:space:]]+(rm|mv|push))' <<<"$lc" \
   && block "terraform apply/destroy/state changes are human-triggered"
 # Same rule through the Makefile wrappers, which don't contain the word "terraform apply".
-grep -Eq 'make[^|;&]*[[:space:]]tf-(apply|destroy|bootstrap|deploy)([[:space:]]|$)' <<<"$lc" \
+grep -Eq '(^|[;&|(][[:space:]]*)make([[:space:]]+-[a-z]+)*([[:space:]]+[a-z_-]+)*[[:space:]]+tf-(apply|destroy|bootstrap|deploy)([[:space:]]|$)' <<<"$lc" \
   && block "make tf-apply/tf-destroy/tf-bootstrap/tf-deploy change or deploy cloud infrastructure"
 grep -Eq '(^|[^a-z_])(drop[[:space:]]+(table|schema|database|role|user)|truncate[[:space:]])' <<<"$lc" \
   && block "destructive SQL (DROP/TRUNCATE) against a database"

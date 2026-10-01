@@ -15,7 +15,7 @@ AWS_CLI := docker run --rm -it --user $(shell id -u):$(shell id -g) -e HOME=/hom
 -include .env
 export
 
-.PHONY: help venv up down fetch-raw load pipeline dagster-run dagster-dev lightdash-deploy screenshot chat bakeoff aws-login aws-whoami tf-fmt tf-validate tf-bootstrap tf-init tf-plan tf-apply tf-output tf-deploy tf-destroy docs lint test test-hooks dbt
+.PHONY: help venv up down fetch-raw load pipeline dagster-run dagster-dev lightdash-deploy screenshot screenshots chat bakeoff aws-login aws-whoami tf-fmt tf-validate tf-bootstrap tf-init tf-plan tf-apply tf-output tf-deploy tf-invites tf-destroy docs lint test test-hooks dbt
 
 help:  ## List targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' Makefile | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
@@ -102,6 +102,25 @@ tf-deploy:  ## [human] Redeploy the app on the EC2 host via SSM (pulls main, re-
 
 tf-destroy:  ## [human] Delete the whole AWS deployment (the state bucket from tf-bootstrap is kept)
 	$(TF) destroy
+
+screenshots:  ## Docs screenshots via the stack's headless browser: Dagster lineage + chat (needs AWS login)
+	docker compose build dagster-webserver
+	docker rm -f juan-chat-shot >/dev/null 2>&1 || true
+	docker run -d --name juan-chat-shot --network juan_default --user $(shell id -u):$(shell id -g) -e HOME=/home/app \
+	  -v $(HOME)/.aws:/home/app/.aws --env-file .env -e AWS_PROFILE=$(AWS_PROFILE_NAME) -e AWS_REGION=af-south-1 \
+	  -e CUBE_URL=http://cube:4000/cubejs-api/v1 juan-dagster:local streamlit run chat/app.py --server.port 8501 \
+	  --server.address 0.0.0.0 --server.headless true --browser.gatherUsageStats false >/dev/null
+	sleep 8
+	docker compose exec -T -e CHAT_URL=http://juan-chat-shot:8501 lightdash node - < docs/screenshots.js > /tmp/juan-shots.json
+	docker rm -f juan-chat-shot >/dev/null
+	$(BIN)/python -c "import json,base64; [open(f'docs/images/{k}.png','wb').write(base64.b64decode(v)) for k,v in json.load(open('/tmp/juan-shots.json')).items()]"
+
+tf-invites:  ## Print the Lightdash login links created on the AWS host (via SSM; no SSH or plugin needed)
+	@id=$$($(AWS_CLI_BATCH) ssm send-command --instance-ids "$$($(TF) output -raw instance_id)" \
+	  --document-name AWS-RunShellScript --parameters 'commands=["cat /opt/juan/lightdash-invites.txt"]' \
+	  --query Command.CommandId --output text); sleep 4; \
+	$(AWS_CLI_BATCH) ssm get-command-invocation --command-id "$$id" \
+	  --instance-id "$$($(TF) output -raw instance_id)" --query StandardOutputContent --output text
 
 docs:  ## Re-embed the Q1–Q7 analysis SQL into docs/ANSWERS.md
 	$(BIN)/python docs/embed_sql.py

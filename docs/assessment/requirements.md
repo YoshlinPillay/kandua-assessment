@@ -28,19 +28,19 @@ Status: ☐ todo · ◐ in progress · ☑ done (verified).
 |---|---|---|---|
 | D1 | Document with ERM + answers + SQL + dashboard screenshots | `docs/ANSWERS.md` (+ exported doc) | ◐ (screenshots pending P6) |
 | D2 | Git repo URL shared | GitHub | ☐ |
-| D3a | README: run locally + cloud, no credentials | `README.md` | ☐ |
+| D3a | README: run locally + cloud, no credentials | `README.md` | ☑ |
 | D3b | Clean, readable code | lint + review | ☐ |
-| D3c | CI/CD instructions | `README.md#ci-cd` | ☐ |
+| D3c | CI/CD instructions | `README.md#cicd` | ☑ |
 | D3d | Guardrail files committed where the agent expects them | `CLAUDE.md`, `.claude/` | ◐ |
 | D3e | AI workflow document | `AI_WORKFLOW.md` | ◐ |
-| D3f | Architecture diagram + design decisions/trade-offs | `docs/ARCHITECTURE.md`, `docs/decisions.md` | ☐ |
+| D3f | Architecture diagram + design decisions/trade-offs | `docs/ARCHITECTURE.md`, `docs/decisions.md` | ☑ (Mermaid, rendered and checked) |
 | D3g | Additional resources | `docs/` | ☐ |
-| D4 | Dashboard running locally, access in README, screenshots | `README.md`, `docs/ANSWERS.md` | ◐ (screenshot in ANSWERS; README pending) |
+| D4 | Dashboard running locally, access in README, screenshots | `README.md`, `docs/ANSWERS.md` | ☑ |
 | D5 | Cloud: read-only DB creds + dashboard URL (outside the repo) | delivered doc only | ☐ |
 
 ## Extras (our own scope)
 | Item | Where | Status |
 |---|---|---|
 | Cube semantic layer generated from dbt | `semantic/cube/` | ☑ |
-| Conversational analytics (Bedrock LLM over Cube, model chosen by bake-off) | `chat/`, `docs/bakeoff.md` | ◐ (gpt-oss 7/7; Claude pending access) |
+| Conversational analytics (Bedrock LLM over Cube, model chosen by bake-off) | `chat/`, `docs/bakeoff.md` | ☑ (30/30 correct + grounded) |
 | Lightdash ↔ Cube parity test | `tests/test_semantic_parity.py` | ☑ |

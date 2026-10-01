@@ -16,13 +16,20 @@ from typing import Any, Protocol
 from chat.cube_client import CubeClient, CubeQueryError
 
 MAX_TOOL_ROUNDS = 6
+# One-time nudge when the model tries to answer without having queried anything (and didn't call off_topic).
+# Found while taking screenshots: gpt-oss sometimes skipped the tools and said the data couldn't answer.
+NO_QUERY_NUDGE = (
+    "You haven't run any query yet. If the question is about Juan's drinking, use run_query with the "
+    "metrics listed in the system prompt before answering. If it isn't, call off_topic."
+)
 OFF_TOPIC_REPLY = "That's not about Juan 🍺 I only answer questions about his drinking habits. Try one below!"
 
 SYSTEM_PROMPT = """You answer questions about Juan's drinking habits (bars, beverages, visits, alcohol units,
 spending) from a governed semantic layer. The data covers 2018-01-03 to 2019-09-22.
 
 How to work:
-- Call list_metrics first to see the available measures and dimensions, then run_query to get numbers.
+- The available measures and dimensions are listed below (list_metrics returns the same). A measure can be
+  broken down by dimensions of its own cube and of any cube in its "joinable_with" list.
 - Use the metric whose description matches the question. Definitions such as "drunk", "last month",
   the NHS weekly limit, happy-hour savings and rounding are already encoded in the metric descriptions:
   use them as they are and don't redefine them.
@@ -134,6 +141,7 @@ class TurnResult:
     usage: dict = field(default_factory=dict)
     off_topic: bool = False  # the topic guardrail fired: the UI shows a meme instead of an answer
     reason: str = ""
+    nudged: bool = False  # the model first tried to answer without data and was asked to query
 
 
 def _run_tool(name: str, tool_input: dict, cube: CubeClient, trace: list[dict]) -> tuple[dict, str]:
@@ -158,11 +166,18 @@ def answer(
     history.append({"role": "user", "content": [{"text": question}]})
     trace: list[dict] = []
     usage: dict = {}
+    nudged = False
+    # The governed catalogue goes in the system prompt, so the model always knows what it can query, instead
+    # of relying on it to call list_metrics first (it sometimes didn't).
+    system = [
+        {"text": SYSTEM_PROMPT},
+        {"text": "Available metrics (cube -> measures/dimensions):\n" + json.dumps(cube.catalogue())},
+    ]
 
     for rounds in range(MAX_TOOL_ROUNDS + 1):
         response = model.converse(
             modelId=model_id,
-            system=[{"text": SYSTEM_PROMPT}],
+            system=system,
             messages=history,
             toolConfig={"tools": TOOLS, "toolChoice": {"auto": {}}},
             inferenceConfig={"maxTokens": 4096},
@@ -198,8 +213,13 @@ def answer(
                 OFF_TOPIC_REPLY, trace, rounds, "off_topic", usage, off_topic=True, reason=reason
             )
         if stop_reason != "tool_use" or not tool_uses:
+            ran_query = any("rows" in q for q in trace)
+            if not ran_query and not nudged and rounds < MAX_TOOL_ROUNDS:
+                nudged = True  # verify-before-answer: one chance to ground the answer in data
+                history.append({"role": "user", "content": [{"text": NO_QUERY_NUDGE}]})
+                continue
             text = "\n".join(block["text"] for block in message["content"] if "text" in block).strip()
-            return TurnResult(text, trace, rounds, stop_reason, usage)
+            return TurnResult(text, trace, rounds, stop_reason, usage, nudged=nudged)
 
         if rounds == MAX_TOOL_ROUNDS:
             break

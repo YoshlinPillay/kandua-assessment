@@ -387,3 +387,15 @@ Lightdash dashboard **Juan the Drinker**, built entirely as code: 14 charts in `
 
 `tests/test_semantic_parity.py` runs every saved dashboard chart through Lightdash's API and asserts that the
 Q1–Q7 tiles equal the independently computed answers.
+
+## Conversational assistant
+
+Ask the same questions in plain English (`make chat`). gpt-oss-120b on Amazon Bedrock answers **only** from
+governed Cube metrics, and every answer shows the queries behind it. Bake-off: 7 golden questions plus 3
+off-topic ones, asked 3× each, gave **30/30 correct, 30/30 grounded** ([bakeoff.md](bakeoff.md)).
+
+![Chat answer](images/chat-answer.png)
+
+Off-topic questions trip the topic guardrail: no data is queried, and you get a meme instead.
+
+![Off-topic guardrail](images/chat-off-topic.png)

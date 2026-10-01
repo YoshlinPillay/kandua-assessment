@@ -97,7 +97,11 @@ def test_parallel_tool_calls_return_in_a_single_message():
 
 def test_unknown_member_becomes_a_tool_error_not_a_crash():
     bad = {"measures": ["fct_drink.invented_metric"]}
-    model = ScriptedModel(tool_call("t1", "run_query", bad), text("I can't answer that from the metrics."))
+    model = ScriptedModel(
+        tool_call("t1", "run_query", bad),
+        text("I can't answer that from the metrics."),
+        text("Still can't: no metric covers it."),  # reply after the no-query nudge
+    )
     cube = FakeCube()
     history: list[dict] = []
     result = answer("q", history, model, "m", cube)
@@ -107,6 +111,7 @@ def test_unknown_member_becomes_a_tool_error_not_a_crash():
     assert "Unknown members" in tool_result["content"][0]["json"]["error"]
     assert cube.loaded == []  # the invalid query never reached Cube
     assert "error" in result.queries[0]
+    assert result.nudged and result.answer == "Still can't: no metric covers it."
 
 
 def test_tool_budget_is_enforced_and_history_stays_valid():
@@ -181,3 +186,39 @@ def test_off_topic_gifs_exist_and_are_animated():
     gifs = sorted((Path(__file__).resolve().parents[1] / "chat/assets").glob("offtopic_*.gif"))
     assert len(gifs) == 3
     assert all(Image.open(g).n_frames > 1 for g in gifs)
+
+
+def test_answer_without_any_query_gets_one_nudge_to_ground_it():
+    model = ScriptedModel(
+        text("The data model can't tell which bar he visits most."),  # gave up without querying
+        tool_call("t1", "run_query", GOOD_QUERY),
+        text("Juan saved R 21,587.09."),
+    )
+    history: list[dict] = []
+    result = answer("How much did Juan save?", history, model, "m", FakeCube())
+    assert result.nudged and result.answer == "Juan saved R 21,587.09."
+    assert len(result.queries) == 1
+    # the catalogue is in the system prompt of every request
+    assert all("fct_drink.happy_hour_savings" in r["system"][1]["text"] for r in model.requests)
+
+
+def test_nudge_happens_at_most_once():
+    model = ScriptedModel(text("No."), text("Still no."))
+    result = answer("q", [], model, "m", FakeCube())
+    assert result.nudged and result.answer == "Still no." and len(model.requests) == 2
+
+
+def test_live_catalogue_exposes_joins_so_visits_can_be_split_by_bar():
+    """Regression (bake-off Q2 0/3): the model must see that fct_visit joins dim_bar."""
+    import os
+
+    import requests
+
+    if not os.environ.get("CUBEJS_API_SECRET"):
+        pytest.skip("needs Cube (run via make test)")
+    try:
+        catalogue = CubeClient().catalogue()
+    except requests.ConnectionError:
+        pytest.skip("Cube is not running")
+    assert "dim_bar" in catalogue["fct_visit"]["joinable_with"]
+    assert "dim_beverage" in catalogue["fct_drink"]["joinable_with"]
