@@ -42,5 +42,5 @@ Status: ☐ todo · ◐ in progress · ☑ done (verified).
 | Item | Where | Status |
 |---|---|---|
 | Cube semantic layer generated from dbt | `semantic/cube/` | ☑ |
-| Conversational analytics (Claude over Cube) | `chat/` | ☐ |
+| Conversational analytics (Bedrock LLM over Cube, model chosen by bake-off) | `chat/`, `docs/bakeoff.md` | ◐ (gpt-oss 7/7; Claude pending access) |
 | Lightdash ↔ Cube parity test | `tests/test_semantic_parity.py` | ☑ |
