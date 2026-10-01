@@ -127,8 +127,10 @@ services:
       S3_FORCE_PATH_STYLE: "true"
       # Background worker: runs CSV/XLSX/image export jobs, not only scheduled deliveries.
       SCHEDULER_ENABLED: "true"
-      # Export download links are presigned S3 URLs; the browser can't resolve http://minio:9000.
-      S3_PUBLIC_ENDPOINT: ${LIGHTDASH_S3_PUBLIC_ENDPOINT:-http://localhost:9100}
+      # Serve every export download through Lightdash (/api/v1/file/...) instead of presigned MinIO URLs,
+      # which point at http://minio:9000 and don't resolve in the user's browser.
+      PERSISTENT_DOWNLOAD_URLS_ENABLED: "true"
+      S3_PUBLIC_ENDPOINT: ${LIGHTDASH_S3_PUBLIC_ENDPOINT:-http://localhost:9100}  # only for direct browser uploads
       # Image/PDF exports: the headless browser renders Lightdash via the internal network, not the LAN IP.
       HEADLESS_BROWSER_HOST: headless-browser
       HEADLESS_BROWSER_PORT: "3000"
