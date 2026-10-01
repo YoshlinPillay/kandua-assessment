@@ -1,9 +1,12 @@
 # Local stack. Run: cp .env.example .env (set passwords) && docker compose up -d && make pipeline
+# All images are pinned and opted out of the host's Watchtower auto-updater (D-025): `:latest` broke the
+# Lightdash CLI/server version pin once.
 # Host ports are chosen to avoid services already running on the dev host (see CLAUDE.md).
 name: juan
 
 services:
   postgres:
+    labels: {com.centurylinklabs.watchtower.enable: "false"}
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
@@ -23,6 +26,7 @@ services:
       retries: 10
 
   dagster-webserver:
+    labels: {com.centurylinklabs.watchtower.enable: "false"}
     build:
       context: .
       dockerfile: docker/dagster/Dockerfile
@@ -41,6 +45,7 @@ services:
         condition: service_healthy
 
   dagster-daemon:
+    labels: {com.centurylinklabs.watchtower.enable: "false"}
     image: juan-dagster:local
     restart: unless-stopped
     command: ["dagster-daemon", "run", "-m", "orchestration.definitions"]
@@ -56,6 +61,7 @@ services:
 
   # --- Semantic layer + BI -----------------------------------------------------------------------------------
   lightdash-db:  # Lightdash's own metadata store (needs pgvector); separate from the warehouse
+    labels: {com.centurylinklabs.watchtower.enable: "false"}
     image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
@@ -70,8 +76,9 @@ services:
       retries: 10
 
   minio:  # S3-compatible store Lightdash uses for query results/exports. Internal only (host :9000 is taken).
+    labels: {com.centurylinklabs.watchtower.enable: "false"}
     # Community build used by Lightdash's own compose (MinIO stopped publishing minio/minio and minio/mc).
-    image: coollabsio/minio:latest
+    image: coollabsio/minio@sha256:69b55a1c1c5dc285ce04db96689f5b2102317fc77a50680a1874ca6efd1c87f9  # pinned by digest (no version tags upstream)
     restart: unless-stopped
     entrypoint: ["/bin/sh", "/init-minio.sh"]
     environment:
@@ -86,7 +93,8 @@ services:
       retries: 20
 
   lightdash:
-    image: lightdash/lightdash:latest
+    labels: {com.centurylinklabs.watchtower.enable: "false"}
+    image: lightdash/lightdash:2.399.4
     platform: linux/amd64
     restart: unless-stopped
     depends_on:
@@ -118,6 +126,7 @@ services:
       - "8100:8080"
 
   lightdash-cli:  # one-shot tool: `make lightdash-deploy`. Not started by `docker compose up`.
+    labels: {com.centurylinklabs.watchtower.enable: "false"}
     build:
       context: .
       dockerfile: docker/lightdash-cli/Dockerfile
@@ -138,7 +147,8 @@ services:
         condition: service_started
 
   cube:
-    image: cubejs/cube:latest
+    labels: {com.centurylinklabs.watchtower.enable: "false"}
+    image: cubejs/cube:v1.7.47
     restart: unless-stopped
     depends_on:
       postgres:

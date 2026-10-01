@@ -153,3 +153,16 @@ def test_lightdash_dashboard_chart_returns_verified_answer(lightdash_charts, pre
     response.raise_for_status()
     read, expected = LIGHTDASH_CHARTS[prefix]
     assert read(response.json()["results"]["rows"]) == expected()
+
+
+def test_every_dashboard_chart_runs_and_returns_rows(lightdash_charts):
+    """Not only the Q-charts: every saved chart must execute in Lightdash (catches broken extra tiles)."""
+    headers, charts = lightdash_charts
+    failures = {}
+    for chart in charts:
+        response = requests.post(
+            f"{LIGHTDASH_URL}/api/v1/saved/{chart['uuid']}/results", headers=headers, json={}, timeout=60
+        )
+        if response.status_code != 200 or not response.json()["results"]["rows"]:
+            failures[chart["name"]] = response.text[:200]
+    assert failures == {}

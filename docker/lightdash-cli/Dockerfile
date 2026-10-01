@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 python3
  && rm -rf /var/lib/apt/lists/* \
  && python3 -m venv /opt/dbt \
  && /opt/dbt/bin/pip install --no-cache-dir "dbt-core==1.12.5" "dbt-postgres==1.11.0" \
- && npm install -g @lightdash/cli@2.399.1
+ && npm install -g @lightdash/cli@2.399.4
 
 ENV PATH="/opt/dbt/bin:${PATH}"
 WORKDIR /app/transform

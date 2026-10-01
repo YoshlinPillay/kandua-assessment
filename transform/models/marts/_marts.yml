@@ -21,8 +21,20 @@ models:
               time_intervals: [DAY, WEEK, MONTH, YEAR]
       - name: iso_week_start
         description: Monday of the ISO week (NHS weekly test, D-016).
+      - name: month_start
+        description: First day of the month.
+      - name: iso_year
+        description: ISO year.
+      - name: iso_week
+        description: ISO week number.
+      - name: calendar_year
+        description: Calendar year.
+      - name: calendar_month
+        description: Calendar month number.
       - name: day_name
         description: Weekday name (Monday … Sunday).
+      - name: iso_day_of_week
+        description: ISO weekday number (1 = Monday … 7 = Sunday), used to sort weekdays.
       - name: is_weekend
         description: Saturday or Sunday.
 
