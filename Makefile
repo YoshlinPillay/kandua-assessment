@@ -55,7 +55,7 @@ screenshot:  ## Export the Lightdash dashboard as docs/images/dashboard.png (Lig
 	cp lightdash/_dashboard.png docs/images/dashboard.png && rm -f lightdash/_dashboard.png  # cp: container writes as root
 
 chat:  ## Conversational analytics UI on :8501 (Bedrock via your `make aws-login` session + local Cube)
-	AWS_PROFILE=$(AWS_PROFILE_NAME) $(BIN)/streamlit run chat/app.py --server.port 8501 --server.address 0.0.0.0
+	AWS_PROFILE=$(AWS_PROFILE_NAME) $(BIN)/streamlit run chat/app.py --server.port 8501 --server.address 0.0.0.0 --server.headless true --browser.gatherUsageStats false
 
 bakeoff:  ## Ask Q1–Q7 to every candidate model on Bedrock, grade correctness + grounding -> docs/bakeoff.md
 	AWS_PROFILE=$(AWS_PROFILE_NAME) $(BIN)/python -m chat.bakeoff $(MODELS)  # e.g. make bakeoff MODELS=openai.gpt-oss-120b-1:0
