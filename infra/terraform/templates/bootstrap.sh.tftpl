@@ -4,6 +4,14 @@
 set -euxo pipefail
 exec > >(tee -a /var/log/juan-bootstrap.log) 2>&1
 
+# 4 GB swap: the host has 4 GB RAM (Free-plan instance, D-032). Idle use is ~2.3 GB; image builds, dbt runs
+# and headless-browser exports peak above that.
+if ! swapon --show | grep -q /swapfile; then
+  dd if=/dev/zero of=/swapfile bs=1M count=4096 status=none
+  chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+  echo '/swapfile none swap defaults 0 0' >> /etc/fstab
+fi
+
 dnf install -y docker git jq
 systemctl enable --now docker
 

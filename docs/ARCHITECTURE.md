@@ -113,7 +113,7 @@ flowchart TB
         GH[GitHub Actions]
     end
     subgraph AWS_af["AWS af-south-1 (Cape Town)"]
-        subgraph EC2["EC2 t3.large · Docker Compose"]
+        subgraph EC2["EC2 c7i-flex.large · Docker Compose"]
             CADDY["Caddy :443<br/>HTTPS via sslip.io"]
             LDS[Lightdash]
             CH["Chat app<br/>(basic auth)"]
@@ -179,5 +179,5 @@ system:
 | Star schema built only from core (Q9/Q10) | Deliberately not 2NF/3NF. Safe because dbt is the single writer and reconciliation tests check it against core. |
 | Lightdash and Cube both, metrics written once (D-003, D-024) | Two tools to run, made safe by generation plus parity tests. Lightdash's own AI is enterprise-only. |
 | gpt-oss-120b chosen by bake-off (D-020, D-027) | Cheapest model that passed every golden question. Claude was not evaluated (needed an extra access step). |
-| One EC2 host + RDS rather than ECS/Fargate (D-029) | The simplest setup that runs the identical compose stack. No horizontal scaling, which this data volume doesn't need. |
+| One EC2 host (Free-plan `c7i-flex.large`, 4 GB + swap) + RDS rather than ECS/Fargate (D-029, D-032) | The simplest setup that runs the identical compose stack. No horizontal scaling, which this data volume doesn't need. |
 | Pinned images, Watchtower opted out (D-025) | Upgrades are explicit. An overnight auto-upgrade had broken the CLI/server version pin. |

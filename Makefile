@@ -74,8 +74,8 @@ tf-fmt:  ## Format Terraform
 
 tf-validate:  ## Validate both Terraform stacks (no AWS access needed)
 	for d in infra/terraform/bootstrap infra/terraform; do \
-	  docker run --rm --user $(shell id -u):$(shell id -g) -e HOME=/tmp -v $(CURDIR):/w -w /w/$$d hashicorp/terraform:1.16.4 init -backend=false -input=false >/dev/null && \
-	  docker run --rm --user $(shell id -u):$(shell id -g) -e HOME=/tmp -v $(CURDIR):/w -w /w/$$d hashicorp/terraform:1.16.4 validate || exit 1; done
+	  docker run --rm --user $(shell id -u):$(shell id -g) -e HOME=/tmp -e TF_DATA_DIR=/tmp/tfvalidate -v $(CURDIR):/w -w /w/$$d --entrypoint sh hashicorp/terraform:1.16.4 -c 'terraform init -backend=false -input=false >/dev/null && \
+	  terraform validate' || exit 1; done
 
 tf-bootstrap:  ## [human] One-time: create the S3 bucket for Terraform state (local state)
 	infra/tf.sh infra/terraform/bootstrap init -input=false

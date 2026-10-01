@@ -23,9 +23,9 @@ variable "bedrock_model_id" {
 }
 
 variable "instance_type" {
-  description = "One EC2 host runs Dagster, Lightdash, Cube, the chat app and Caddy (D-004). Needs ~6 GB RAM."
+  description = "One EC2 host runs the whole stack (D-029). c7i-flex.large is the largest Free-plan-eligible type (4 GB); measured idle use is ~2.3 GB, plus a 4 GB swap file for build/pipeline peaks (D-032)."
   type        = string
-  default     = "t3.large"
+  default     = "c7i-flex.large"
 }
 
 variable "db_instance_class" {
