@@ -40,9 +40,9 @@ chartConfig:
             width: 2
             color: '#DC2626'
           label:
-            formatter: 'NHS limit: 14 units'
+            formatter: NHS 14
           data:
-          - name: 'NHS limit: 14 units'
+          - name: NHS 14
             yAxis: '14'
             lineStyle:
               color: '#DC2626'

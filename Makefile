@@ -6,7 +6,7 @@ BIN   := $(VENV)/bin
 -include .env
 export
 
-.PHONY: help venv up down fetch-raw load pipeline dagster-run dagster-dev lightdash-deploy docs lint test test-hooks dbt
+.PHONY: help venv up down fetch-raw load pipeline dagster-run dagster-dev lightdash-deploy screenshot docs lint test test-hooks dbt
 
 help:  ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
@@ -43,6 +43,10 @@ dagster-dev:  ## Dagster UI locally on :3001 (the compose service does the same 
 
 lightdash-deploy:  ## Deploy the dbt project (metrics in marts YAML) to Lightdash; needs LIGHTDASH_API_KEY in .env
 	docker compose --profile tools run --rm -T --entrypoint /app/deploy.sh lightdash-cli
+
+screenshot:  ## Export the Lightdash dashboard as docs/images/dashboard.png (Lightdash's own headless export)
+	docker compose --profile tools run --rm -T --entrypoint node lightdash-cli /app/export-dashboard.js
+	cp lightdash/_dashboard.png docs/images/dashboard.png && rm -f lightdash/_dashboard.png  # cp: container writes as root
 
 docs:  ## Re-embed the Q1–Q7 analysis SQL into docs/ANSWERS.md
 	$(BIN)/python docs/embed_sql.py

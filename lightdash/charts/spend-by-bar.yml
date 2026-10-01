@@ -15,7 +15,7 @@ metricQuery:
   filters: {}
   sorts:
   - fieldId: fct_drink_total_spent
-    descending: true
+    descending: false
   limit: 500
   tableCalculations: []
 chartConfig:
@@ -26,7 +26,7 @@ chartConfig:
       yField:
       - fct_drink_total_spent
       - fct_drink_happy_hour_savings
-      flipAxes: false
+      flipAxes: true
     eChartsConfig:
       series:
       - type: bar

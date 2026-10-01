@@ -23,7 +23,7 @@ metricQuery:
         - beer
   sorts:
   - fieldId: fct_drink_total_servings
-    descending: true
+    descending: false
   limit: 500
   tableCalculations: []
 chartConfig:

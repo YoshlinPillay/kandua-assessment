@@ -375,4 +375,15 @@ tools get fewer joins, precomputed additive measures and simple, fast queries. T
 vs OLAP (star) trade-off.
 
 ## Dashboard
-_Screenshots are added in P6 (Lightdash)._
+
+Lightdash dashboard **Juan the Drinker**, built entirely as code: 14 charts in `lightdash/charts/`, the layout in
+`lightdash/dashboards/`, and every metric defined in `transform/models/marts/_marts.yml`.
+- `make lightdash-deploy` lints the YAML against Lightdash's schemas and uploads it.
+- `make screenshot` regenerates this image through Lightdash's own export.
+- [`images/dashboard-export.pdf`](images/dashboard-export.pdf) is a PDF exported from the Lightdash UI. It was
+  taken before the Q2/Q3 sort-order tweak; the numbers are the same.
+
+![Juan the Drinker dashboard](images/dashboard.png)
+
+`tests/test_semantic_parity.py` runs every saved dashboard chart through Lightdash's API and asserts that the
+Q1–Q7 tiles equal the independently computed answers.

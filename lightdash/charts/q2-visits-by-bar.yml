@@ -14,7 +14,7 @@ metricQuery:
   filters: {}
   sorts:
   - fieldId: fct_visit_visits
-    descending: true
+    descending: false
   limit: 500
   tableCalculations: []
 chartConfig:

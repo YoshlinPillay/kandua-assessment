@@ -21,7 +21,7 @@ Status: ☐ todo · ◐ in progress · ☑ done (verified).
 | 05 Q8 | Does the transactional model respect 1NF/2NF/3NF? | `docs/ANSWERS.md#q8` | ☑ |
 | 05 Q9 | Analytical model proposal | `docs/erm/analytical.dbml`, `transform/models/marts/` | ☑ (built, reconciled) |
 | 05 Q10 | Does the analytical model respect the NFs? | `docs/ANSWERS.md#q10` | ☑ |
-| 06 | Dashboard for Q1–Q7 + extra analytics, every number traceable | `lightdash/`, dbt metrics | ☐ |
+| 06 | Dashboard for Q1–Q7 + extra analytics, every number traceable | `lightdash/`, dbt metrics | ☑ (parity-tested via Lightdash API) |
 
 ## Deliverables
 | # | Requirement | Where | Status |
@@ -35,12 +35,12 @@ Status: ☐ todo · ◐ in progress · ☑ done (verified).
 | D3e | AI workflow document | `AI_WORKFLOW.md` | ◐ |
 | D3f | Architecture diagram + design decisions/trade-offs | `docs/ARCHITECTURE.md`, `docs/decisions.md` | ☐ |
 | D3g | Additional resources | `docs/` | ☐ |
-| D4 | Dashboard running locally, access in README, screenshots | `README.md`, `docs/ANSWERS.md` | ☐ |
+| D4 | Dashboard running locally, access in README, screenshots | `README.md`, `docs/ANSWERS.md` | ◐ (screenshot in ANSWERS; README pending) |
 | D5 | Cloud: read-only DB creds + dashboard URL (outside the repo) | delivered doc only | ☐ |
 
 ## Extras (our own scope)
 | Item | Where | Status |
 |---|---|---|
-| Cube semantic layer generated from dbt | `semantic/cube/` | ☐ |
+| Cube semantic layer generated from dbt | `semantic/cube/` | ☑ |
 | Conversational analytics (Claude over Cube) | `chat/` | ☐ |
-| Lightdash ↔ Cube parity test | `tests/test_semantic_parity.py` | ☐ |
+| Lightdash ↔ Cube parity test | `tests/test_semantic_parity.py` | ☑ |

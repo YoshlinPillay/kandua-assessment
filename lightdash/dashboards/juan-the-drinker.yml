@@ -11,120 +11,145 @@ filters:
   dimensions: []
 tabs: []
 tiles:
-  # --- Answers --------------------------------------------------------------------------------------------------
-  - type: heading
-    x: 0
-    y: 0
-    w: 36
-    h: 1
-    properties:
-      text: Answers (Q1–Q7), data 2018-01-03 → 2019-09-22
-  - type: saved_chart
-    x: 0
-    y: 1
-    w: 7
-    h: 4
-    properties: {chartSlug: q4-visits-without-drink, title: Q4 · Visits without a drink}
-  - type: saved_chart
-    x: 7
-    y: 1
-    w: 7
-    h: 4
-    properties: {chartSlug: q5-times-drunk-last-month, title: Q5 · Times drunk (last 30 days)}
-  - type: saved_chart
-    x: 14
-    y: 1
-    w: 7
-    h: 4
-    properties: {chartSlug: q6-average-weekly-units, title: Q6 · Avg units per week (limit 14)}
-  - type: saved_chart
-    x: 21
-    y: 1
-    w: 7
-    h: 4
-    properties: {chartSlug: q6-weeks-over-nhs-limit, title: Q6 · Weeks over NHS limit}
-  - type: saved_chart
-    x: 28
-    y: 1
-    w: 8
-    h: 4
-    properties: {chartSlug: q7-happy-hour-savings, title: Q7 · Happy-hour savings (R)}
-  - type: saved_chart
-    x: 0
-    y: 5
-    w: 12
-    h: 8
-    properties: {chartSlug: q1-servings-by-beverage-type, title: Q1 · Most-drunk beverage type}
-  - type: saved_chart
-    x: 12
-    y: 5
-    w: 12
-    h: 8
-    properties: {chartSlug: q2-visits-by-bar, title: Q2 · Most-visited bar}
-  - type: saved_chart
-    x: 24
-    y: 5
-    w: 12
-    h: 8
-    properties: {chartSlug: q3-beer-brands, title: Q3 · Favourite beer brand}
-  - type: markdown
-    x: 0
-    y: 13
-    w: 36
-    h: 5
-    properties:
-      title: How to read this dashboard
-      content: |
-        **Q1** Beer (1,595 servings) · **Q2** Yours Truly (207 vs Jerry's 206) · **Q3** Castle Lite (754) ·
-        **Q4** 104 visits · **Q5** 1 (2019-08-31) · **Q6** Yes: 33.24 units/week, 87 of 90 weeks over 14 ·
-        **Q7** R 21,587.09 saved.
+- type: heading
+  x: 0
+  y: 0
+  w: 36
+  h: 1
+  properties:
+    text: Answers (Q1–Q7), data 2018-01-03 → 2019-09-22
+- type: saved_chart
+  x: 0
+  y: 1
+  w: 7
+  h: 4
+  properties:
+    chartSlug: q4-visits-without-drink
+    title: Q4 · Visits without a drink
+- type: saved_chart
+  x: 7
+  y: 1
+  w: 7
+  h: 4
+  properties:
+    chartSlug: q5-times-drunk-last-month
+    title: Q5 · Times drunk (last 30 days)
+- type: saved_chart
+  x: 14
+  y: 1
+  w: 7
+  h: 4
+  properties:
+    chartSlug: q6-average-weekly-units
+    title: Q6 · Avg units per week (limit 14)
+- type: saved_chart
+  x: 21
+  y: 1
+  w: 7
+  h: 4
+  properties:
+    chartSlug: q6-weeks-over-nhs-limit
+    title: Q6 · Weeks over NHS limit
+- type: saved_chart
+  x: 28
+  y: 1
+  w: 8
+  h: 4
+  properties:
+    chartSlug: q7-happy-hour-savings
+    title: Q7 · Happy-hour savings (R)
+- type: saved_chart
+  x: 0
+  y: 5
+  w: 12
+  h: 8
+  properties:
+    chartSlug: q1-servings-by-beverage-type
+    title: Q1 · Most-drunk beverage type
+- type: saved_chart
+  x: 12
+  y: 5
+  w: 12
+  h: 8
+  properties:
+    chartSlug: q2-visits-by-bar
+    title: Q2 · Most-visited bar
+- type: saved_chart
+  x: 24
+  y: 5
+  w: 12
+  h: 8
+  properties:
+    chartSlug: q3-beer-brands
+    title: Q3 · Favourite beer brand
+- type: markdown
+  x: 0
+  y: 13
+  w: 36
+  h: 4
+  properties:
+    title: How to read this dashboard
+    content: |
+      **Q1** Beer (1,595 servings) · **Q2** Yours Truly (207 vs Jerry's 206) · **Q3** Castle Lite (754) ·
+      **Q4** 104 visits · **Q5** 1 (2019-08-31) · **Q6** Yes: 33.24 units/week, 87 of 90 weeks over 14 ·
+      **Q7** R 21,587.09 saved.
 
-        Every tile is a metric defined once in dbt (`transform/models/marts/_marts.yml`). Each answer is also
-        computed in SQL (`transform/analyses/`) and independently in pandas, and `make test` asserts they match.
-        Interpretation choices (what counts as "drunk", "last month", ISO weeks, rounding) are in `docs/decisions.md`.
-        Tiger's Milk Lager is assumed to be a 1.2-unit beer (D-008), and prices are assumed to be ZAR (D-019).
-
-  # --- Habits & context -------------------------------------------------------------------------------------------
-  - type: heading
-    x: 0
-    y: 18
-    w: 36
-    h: 1
-    properties:
-      text: Drinking habits
-  - type: saved_chart
-    x: 0
-    y: 19
-    w: 36
-    h: 9
-    properties: {chartSlug: weekly-units-vs-nhs-limit, title: Weekly alcohol units vs the NHS 14-unit guideline}
-  - type: saved_chart
-    x: 0
-    y: 28
-    w: 18
-    h: 8
-    properties: {chartSlug: monthly-alcohol-units, title: Alcohol units per month}
-  - type: saved_chart
-    x: 18
-    y: 28
-    w: 18
-    h: 8
-    properties: {chartSlug: units-by-weekday, title: Alcohol units by weekday}
-  - type: saved_chart
-    x: 0
-    y: 36
-    w: 12
-    h: 8
-    properties: {chartSlug: spend-by-bar, title: Spend vs savings by bar (R)}
-  - type: saved_chart
-    x: 12
-    y: 36
-    w: 12
-    h: 8
-    properties: {chartSlug: spend-by-beverage-type, title: Spend by beverage type (R)}
-  - type: saved_chart
-    x: 24
-    y: 36
-    w: 12
-    h: 8
-    properties: {chartSlug: happy-hour-vs-regular, title: Happy hour vs regular servings}
+      Every tile is a metric defined once in dbt (`transform/models/marts/_marts.yml`). Each answer is also
+      computed in SQL (`transform/analyses/`) and independently in pandas, and `make test` asserts they match.
+      Interpretation choices (what counts as "drunk", "last month", ISO weeks, rounding) are in `docs/decisions.md`.
+      Tiger's Milk Lager is assumed to be a 1.2-unit beer (D-008), and prices are assumed to be ZAR (D-019).
+- type: heading
+  x: 0
+  y: 17
+  w: 36
+  h: 1
+  properties:
+    text: Drinking habits
+- type: saved_chart
+  x: 0
+  y: 18
+  w: 36
+  h: 9
+  properties:
+    chartSlug: weekly-units-vs-nhs-limit
+    title: Weekly alcohol units vs the NHS 14-unit guideline
+- type: saved_chart
+  x: 0
+  y: 27
+  w: 18
+  h: 8
+  properties:
+    chartSlug: monthly-alcohol-units
+    title: Alcohol units per month
+- type: saved_chart
+  x: 18
+  y: 27
+  w: 18
+  h: 8
+  properties:
+    chartSlug: units-by-weekday
+    title: Alcohol units by weekday
+- type: saved_chart
+  x: 0
+  y: 35
+  w: 12
+  h: 8
+  properties:
+    chartSlug: spend-by-bar
+    title: Spend vs savings by bar (R)
+- type: saved_chart
+  x: 12
+  y: 35
+  w: 12
+  h: 8
+  properties:
+    chartSlug: spend-by-beverage-type
+    title: Spend by beverage type (R)
+- type: saved_chart
+  x: 24
+  y: 35
+  w: 12
+  h: 8
+  properties:
+    chartSlug: happy-hour-vs-regular
+    title: Happy hour vs regular servings
