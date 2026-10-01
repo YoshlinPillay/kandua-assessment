@@ -12,12 +12,14 @@ services:
     ports: !reset []
     depends_on: !reset {}
     environment:
+      DAGSTER_PG_URL: postgresql+psycopg2://${POSTGRES_ADMIN_USER}:${POSTGRES_ADMIN_PASSWORD}@${POSTGRES_HOST}:5432/dagster?sslmode=require
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: "5432"
       POSTGRES_SSLMODE: require
 
   dagster-daemon:
     environment:
+      DAGSTER_PG_URL: postgresql+psycopg2://${POSTGRES_ADMIN_USER}:${POSTGRES_ADMIN_PASSWORD}@${POSTGRES_HOST}:5432/dagster?sslmode=require
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: "5432"
       POSTGRES_SSLMODE: require

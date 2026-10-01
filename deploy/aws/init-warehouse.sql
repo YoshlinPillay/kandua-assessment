@@ -10,6 +10,10 @@ alter role juan_loader password :'loader_pw';
 alter role juan_reader password :'reader_pw';
 
 grant juan_loader to current_user;  -- RDS master isn't a superuser; it needs membership to set ownership
+
+-- Dagster's own run/event storage (D-033), owned by the pipeline role.
+select 'create database dagster owner juan_loader'
+where not exists (select 1 from pg_database where datname = 'dagster') \gexec
 grant create, connect on database juan to juan_loader;
 grant connect on database juan to juan_reader;
 

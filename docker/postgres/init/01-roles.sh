@@ -9,6 +9,7 @@ create schema if not exists raw;
 create schema if not exists staging;
 create schema if not exists core;
 create schema if not exists marts;
+create database dagster;  -- Dagster run/event storage (D-033)
 
 select format('create role %I login password %L', :'reader', :'reader_pw')
 where not exists (select 1 from pg_roles where rolname = :'reader') \gexec

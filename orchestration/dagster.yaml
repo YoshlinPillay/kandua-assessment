@@ -1,4 +1,11 @@
-# Dagster instance config. Run history lives on local disk (a named volume in compose). That's fine for a
-# single-node deployment; a multi-node setup would point storage at Postgres.
+# Dagster instance config for the containerised webserver + daemon (local compose and AWS).
+# Storage is Postgres, not SQLite: several processes (webserver, daemon, job runs) share it, and concurrent SQLite
+# initialisation corrupted the schema-version table on the first AWS deploy (D-033). The URL comes from the
+# environment (TLS on AWS). `make dagster-run` in the venv uses its own single-process SQLite instance instead.
+storage:
+  postgres:
+    postgres_url:
+      env: DAGSTER_PG_URL
+
 telemetry:
   enabled: false
