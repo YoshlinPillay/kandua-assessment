@@ -10,6 +10,7 @@ RUN pip install --no-cache-dir -r requirements.lock
 COPY ingestion ./ingestion
 COPY orchestration ./orchestration
 COPY transform ./transform
+COPY chat ./chat
 RUN pip install --no-cache-dir --no-deps -e . \
  && mkdir -p "$DAGSTER_HOME" && cp orchestration/dagster.yaml "$DAGSTER_HOME/dagster.yaml" \
  # Parse the dbt manifest at build time (no DB needed) so Dagster can load the asset graph on start.

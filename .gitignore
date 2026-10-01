@@ -10,6 +10,8 @@
 *.tfstate
 *.tfstate.*
 *.tfplan
+tf.plan
+terraform.tfvars
 crash.log
 
 # Python

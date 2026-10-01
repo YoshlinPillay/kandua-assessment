@@ -1,0 +1,21 @@
+# Public entry point on the EC2 host. Automatic HTTPS (Let's Encrypt) on <ip-with-dashes>.sslip.io names.
+# Lightdash has its own login; Dagster and the chat app have none, so they sit behind basic auth (D-029):
+# that stops strangers triggering pipeline runs or spending Bedrock credit.
+
+lightdash.{$DOMAIN} {
+	reverse_proxy lightdash:8080
+}
+
+chat.{$DOMAIN} {
+	basic_auth {
+		juan {$BASIC_AUTH_HASH}
+	}
+	reverse_proxy chat:8501
+}
+
+dagster.{$DOMAIN} {
+	basic_auth {
+		juan {$BASIC_AUTH_HASH}
+	}
+	reverse_proxy dagster-webserver:3000
+}

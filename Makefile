@@ -5,6 +5,9 @@ BIN   := $(VENV)/bin
 # AWS CLI via its official image, run as the calling user so ~/.aws stays user-owned (the root-owned files
 # it otherwise writes break boto3/Terraform). Auth is `aws login` short-lived credentials, no access keys.
 AWS_PROFILE_NAME ?= kandua
+AWS_CLI_BATCH = docker run --rm --user $(shell id -u):$(shell id -g) -e HOME=/home/aws \
+	-v $(HOME)/.aws:/home/aws/.aws amazon/aws-cli:2.37.7 --profile $(AWS_PROFILE_NAME) --region af-south-1
+TF := infra/tf.sh infra/terraform
 AWS_CLI := docker run --rm -it --user $(shell id -u):$(shell id -g) -e HOME=/home/aws \
 	-v $(HOME)/.aws:/home/aws/.aws amazon/aws-cli:2.37.7
 
@@ -12,10 +15,10 @@ AWS_CLI := docker run --rm -it --user $(shell id -u):$(shell id -g) -e HOME=/hom
 -include .env
 export
 
-.PHONY: help venv up down fetch-raw load pipeline dagster-run dagster-dev lightdash-deploy screenshot chat bakeoff aws-login aws-whoami docs lint test test-hooks dbt
+.PHONY: help venv up down fetch-raw load pipeline dagster-run dagster-dev lightdash-deploy screenshot chat bakeoff aws-login aws-whoami tf-fmt tf-validate tf-bootstrap tf-init tf-plan tf-apply tf-output tf-deploy tf-destroy docs lint test test-hooks dbt
 
 help:  ## List targets
-	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
+	@grep -hE '^[a-zA-Z_-]+:.*?## ' Makefile | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
 
 venv:  ## Create the local Python env with dev tooling
 	python3.12 -m venv $(VENV)
@@ -65,6 +68,40 @@ aws-login:  ## Sign in to AWS with console credentials (browser on any device; v
 
 aws-whoami:  ## Show the AWS identity the session resolves to
 	$(AWS_CLI) sts get-caller-identity --profile $(AWS_PROFILE_NAME)
+
+tf-fmt:  ## Format Terraform
+	docker run --rm --user $(shell id -u):$(shell id -g) -v $(CURDIR):/w -w /w hashicorp/terraform:1.16.4 fmt -recursive infra/terraform
+
+tf-validate:  ## Validate both Terraform stacks (no AWS access needed)
+	for d in infra/terraform/bootstrap infra/terraform; do \
+	  docker run --rm --user $(shell id -u):$(shell id -g) -e HOME=/tmp -v $(CURDIR):/w -w /w/$$d hashicorp/terraform:1.16.4 init -backend=false -input=false >/dev/null && \
+	  docker run --rm --user $(shell id -u):$(shell id -g) -e HOME=/tmp -v $(CURDIR):/w -w /w/$$d hashicorp/terraform:1.16.4 validate || exit 1; done
+
+tf-bootstrap:  ## [human] One-time: create the S3 bucket for Terraform state (local state)
+	infra/tf.sh infra/terraform/bootstrap init -input=false
+	infra/tf.sh infra/terraform/bootstrap apply
+
+tf-init:  ## Init the main stack against the remote state bucket
+	$(TF) init -input=false -reconfigure \
+	  -backend-config="bucket=juan-tfstate-$$($(AWS_CLI_BATCH) sts get-caller-identity --query Account --output text)"
+
+tf-plan:  ## Show what Terraform would change (writes tf.plan for tf-apply)
+	$(TF) plan -input=false -out=tf.plan
+
+tf-apply:  ## [human] Apply the reviewed plan from tf-plan
+	$(TF) apply -input=false tf.plan
+
+tf-output:  ## URLs, endpoints and IDs of the deployment
+	$(TF) output
+
+tf-deploy:  ## [human] Redeploy the app on the EC2 host via SSM (pulls main, re-runs deploy/aws/deploy.sh)
+	$(AWS_CLI_BATCH) ssm send-command --instance-ids "$$($(TF) output -raw instance_id)" \
+	  --document-name AWS-RunShellScript --comment "make tf-deploy" \
+	  --parameters 'commands=["source /etc/profile.d/juan.sh && /opt/juan/app/deploy/aws/deploy.sh"],executionTimeout=["3600"]' \
+	  --query Command.CommandId --output text
+
+tf-destroy:  ## [human] Delete the whole AWS deployment (the state bucket from tf-bootstrap is kept)
+	$(TF) destroy
 
 docs:  ## Re-embed the Q1–Q7 analysis SQL into docs/ANSWERS.md
 	$(BIN)/python docs/embed_sql.py

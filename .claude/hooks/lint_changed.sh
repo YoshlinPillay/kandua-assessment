@@ -6,6 +6,7 @@ set -uo pipefail
 root="${CLAUDE_PROJECT_DIR:-$PWD}"
 path=$(jq -r '.tool_input.file_path // empty')
 [[ -z "$path" || ! -f "$path" ]] && exit 0
+[[ "$path" == "$root/"* ]] || exit 0  # only lint project files (not scratch files elsewhere)
 rel=${path#"$root/"}
 bin="$root/.venv/bin"
 

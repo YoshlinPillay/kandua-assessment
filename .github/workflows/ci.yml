@@ -71,3 +71,20 @@ jobs:
 
       - name: Dagster definitions load and the job runs
         run: make dagster-run
+
+  terraform:
+    name: Terraform fmt + validate (no AWS access)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.4
+      - name: fmt
+        run: terraform fmt -check -recursive infra/terraform
+      - name: validate
+        run: |
+          for d in infra/terraform/bootstrap infra/terraform; do
+            terraform -chdir=$d init -backend=false -input=false
+            terraform -chdir=$d validate
+          done

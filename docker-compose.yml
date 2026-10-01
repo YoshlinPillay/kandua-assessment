@@ -165,6 +165,7 @@ services:
       - ./transform:/app/transform
       - ./docker/lightdash-cli/deploy.sh:/app/deploy.sh:ro
       - ./docker/lightdash-cli/export-dashboard.js:/app/export-dashboard.js:ro
+      - ./docker/lightdash-cli/invite-users.js:/app/invite-users.js:ro
       - ./lightdash:/app/lightdash
     depends_on:
       lightdash:
@@ -187,13 +188,13 @@ services:
       CUBEJS_API_SECRET: ${CUBEJS_API_SECRET}
       CUBEJS_DEV_MODE: "true"  # local playground on :4000; disabled on AWS
       DBT_MANIFEST_PATH: /cube/dbt/manifest.json
-      DBT_CATALOG_PATH: /cube/dbt/catalog.json
+      DBT_CATALOG_PATH: /cube/dbt/catalog.json  # directory mount below: single-file binds of not-yet-built
+                                                # artefacts make Docker create directories in their place
     ports:
       - "4000:4000"
     volumes:
       - ./semantic/cube:/cube/conf
-      - ./transform/target/manifest.json:/cube/dbt/manifest.json:ro
-      - ./transform/target/catalog.json:/cube/dbt/catalog.json:ro
+      - ./transform/target:/cube/dbt:ro
 
 volumes:
   pgdata:

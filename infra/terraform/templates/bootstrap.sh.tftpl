@@ -1,0 +1,27 @@
+#!/bin/bash
+# EC2 first boot (user_data): install Docker + Compose + Buildx, clone the repo, run the deploy script.
+# Later deploys run deploy/aws/deploy.sh through SSM; this script is not re-run.
+set -euxo pipefail
+exec > >(tee -a /var/log/juan-bootstrap.log) 2>&1
+
+dnf install -y docker git jq
+systemctl enable --now docker
+
+# Pinned plugin versions (same Compose major as local development).
+mkdir -p /usr/local/lib/docker/cli-plugins
+curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-compose \
+  https://github.com/docker/compose/releases/download/v5.5.1/docker-compose-linux-x86_64
+curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-buildx \
+  https://github.com/docker/buildx/releases/download/v0.37.2/buildx-v0.37.2.linux-amd64
+chmod +x /usr/local/lib/docker/cli-plugins/*
+
+mkdir -p /opt/${project}
+git clone --branch "${git_ref}" "https://github.com/${github_repo}.git" /opt/${project}/app
+
+cat > /etc/profile.d/juan.sh <<ENV
+export JUAN_PROJECT=${project}
+export AWS_REGION=${region}
+export JUAN_GIT_REF=${git_ref}
+ENV
+
+JUAN_PROJECT=${project} AWS_REGION=${region} JUAN_GIT_REF=${git_ref} /opt/${project}/app/deploy/aws/deploy.sh
