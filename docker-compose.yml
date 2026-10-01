@@ -84,6 +84,8 @@ services:
     environment:
       MINIO_ROOT_USER: lightdash
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9100:9000"  # browser-facing S3 for Lightdash export downloads (host :9000 is taken)
     volumes:
       - minio_data:/data
       - ./docker/minio/init-minio.sh:/init-minio.sh:ro
@@ -102,6 +104,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      headless-browser:
+        condition: service_started
     environment:
       PGHOST: lightdash-db
       PGPORT: "5432"
@@ -121,9 +125,21 @@ services:
       S3_ACCESS_KEY: lightdash
       S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       S3_FORCE_PATH_STYLE: "true"
-      SCHEDULER_ENABLED: "false"  # no headless browser: scheduled image deliveries are out of scope
+      # Background worker: runs CSV/XLSX/image export jobs, not only scheduled deliveries.
+      SCHEDULER_ENABLED: "true"
+      # Export download links are presigned S3 URLs; the browser can't resolve http://minio:9000.
+      S3_PUBLIC_ENDPOINT: ${LIGHTDASH_S3_PUBLIC_ENDPOINT:-http://localhost:9100}
+      # Image/PDF exports: the headless browser renders Lightdash via the internal network, not the LAN IP.
+      HEADLESS_BROWSER_HOST: headless-browser
+      HEADLESS_BROWSER_PORT: "3000"
+      INTERNAL_LIGHTDASH_HOST: http://lightdash:8080
     ports:
       - "8100:8080"
+
+  headless-browser:  # renders charts/dashboards for image and PDF exports (same image as Lightdash's compose)
+    labels: {com.centurylinklabs.watchtower.enable: "false"}
+    image: ghcr.io/browserless/chromium:v2.49.0
+    restart: unless-stopped
 
   lightdash-cli:  # one-shot tool: `make lightdash-deploy`. Not started by `docker compose up`.
     labels: {com.centurylinklabs.watchtower.enable: "false"}
