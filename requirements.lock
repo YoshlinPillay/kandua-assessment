@@ -5,8 +5,11 @@ annotated-types==0.8.0
 antlr4-python3-runtime==4.13.2
 anyio==4.15.1
 attrs==26.1.0
+awscrt==0.36.0
 babel==2.18.0
 backoff==2.2.1
+boto3==1.43.106
+botocore==1.43.106
 certifi==2026.7.22
 cfgv==3.5.0
 chardet==7.6.0
@@ -56,6 +59,7 @@ iniconfig==2.3.0
 isodate==0.7.2
 Jinja2==3.1.6
 jinja2-simple-tags==0.6.1
+jmespath==1.1.0
 jsonpath-ng==1.8.0
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
@@ -82,6 +86,7 @@ pathlib_abc==0.5.2
 pathspec==1.0.4
 pathvalidate==3.3.1
 pendulum==3.2.0
+pillow==12.3.0
 platformdirs==4.12.2
 pluggy==1.6.0
 pre_commit==4.6.2
@@ -114,6 +119,7 @@ rich==15.0.0
 rich-argparse==1.8.0
 rpds-py==2026.6.3
 ruff==0.16.9
+s3transfer==0.19.2
 semver==3.1.0
 setuptools==84.0.0
 shellingham==1.5.4

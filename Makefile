@@ -2,11 +2,17 @@ SHELL := /bin/bash
 VENV  := .venv
 BIN   := $(VENV)/bin
 
+# AWS CLI via its official image, run as the calling user so ~/.aws stays user-owned (the root-owned files
+# it otherwise writes break boto3/Terraform). Auth is `aws login` short-lived credentials, no access keys.
+AWS_PROFILE_NAME ?= kandua
+AWS_CLI := docker run --rm -it --user $(shell id -u):$(shell id -g) -e HOME=/home/aws \
+	-v $(HOME)/.aws:/home/aws/.aws amazon/aws-cli:2.37.7
+
 # Load .env (if present) and export it to every recipe, so dlt, dbt and pytest see the same settings.
 -include .env
 export
 
-.PHONY: help venv up down fetch-raw load pipeline dagster-run dagster-dev lightdash-deploy screenshot docs lint test test-hooks dbt
+.PHONY: help venv up down fetch-raw load pipeline dagster-run dagster-dev lightdash-deploy screenshot aws-login aws-whoami docs lint test test-hooks dbt
 
 help:  ## List targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
@@ -47,6 +53,12 @@ lightdash-deploy:  ## Deploy the dbt project (metrics in marts YAML) to Lightdas
 screenshot:  ## Export the Lightdash dashboard as docs/images/dashboard.png (Lightdash's own headless export)
 	docker compose --profile tools run --rm -T --entrypoint node lightdash-cli /app/export-dashboard.js
 	cp lightdash/_dashboard.png docs/images/dashboard.png && rm -f lightdash/_dashboard.png  # cp: container writes as root
+
+aws-login:  ## Sign in to AWS with console credentials (browser on any device; valid up to 12h)
+	$(AWS_CLI) login --remote --profile $(AWS_PROFILE_NAME) --region af-south-1
+
+aws-whoami:  ## Show the AWS identity the session resolves to
+	$(AWS_CLI) sts get-caller-identity --profile $(AWS_PROFILE_NAME)
 
 docs:  ## Re-embed the Q1–Q7 analysis SQL into docs/ANSWERS.md
 	$(BIN)/python docs/embed_sql.py
