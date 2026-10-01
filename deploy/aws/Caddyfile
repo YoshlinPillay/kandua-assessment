@@ -3,6 +3,13 @@
 # that stops strangers triggering pipeline runs or spending Bedrock credit.
 
 lightdash.{$DOMAIN} {
+	# Organisation creation only over the internal network (bootstrap.js), never from the internet, so nobody
+	# can claim a fresh instance before the deploy bootstraps it (D-034). Invite links keep working.
+	@create_org {
+		method PUT
+		path /api/v1/org
+	}
+	respond @create_org "Forbidden" 403
 	reverse_proxy lightdash:8080
 }
 

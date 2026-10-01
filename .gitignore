@@ -39,3 +39,4 @@ docs/assessment/*.pdf
 # Claude Code local-only settings
 .claude/settings.local.json
 *.egg-info/
+.state/

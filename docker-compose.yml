@@ -168,6 +168,8 @@ services:
       - ./docker/lightdash-cli/deploy.sh:/app/deploy.sh:ro
       - ./docker/lightdash-cli/export-dashboard.js:/app/export-dashboard.js:ro
       - ./docker/lightdash-cli/invite-users.js:/app/invite-users.js:ro
+      - ./docker/lightdash-cli/bootstrap.js:/app/bootstrap.js:ro
+      - ${JUAN_STATE_DIR:-./.state}:/app/state  # AWS: root-only bootstrap state (deploy user + API token)
       - ./lightdash:/app/lightdash
     depends_on:
       lightdash:

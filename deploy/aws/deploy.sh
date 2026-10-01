@@ -9,7 +9,12 @@ REGION="${AWS_REGION:-af-south-1}"
 REF="${JUAN_GIT_REF:-main}"
 APP=/opt/$PROJECT/app
 COMPOSE=(docker compose -f docker-compose.yml -f docker-compose.aws.yml)
+LOG=/var/log/juan-deploy.log
+# Full log on the host: SSM truncates command output at 24 KB, which Dagster's debug output fills.
+[ "${JUAN_DEPLOY_UPDATED:-}" = 1 ] || : > "$LOG"
+exec > >(tee -a "$LOG") 2>&1
 log() { echo "[deploy $(date -u +%H:%M:%S)] $*"; }
+trap 'log "FAILED at line $LINENO (exit $?); full log: $LOG"' ERR
 
 cd "$APP"
 if [ "${JUAN_DEPLOY_UPDATED:-}" != 1 ]; then
@@ -27,15 +32,7 @@ DOMAIN=$(param config/public-domain)
 MASTER=$(aws secretsmanager get-secret-value --region "$REGION" --secret-id "$(param config/rds-master-secret)" \
   --query SecretString --output text)
 BASIC_AUTH_HASH=$(docker run --rm caddy:2.10-alpine caddy hash-password --plaintext "$(param basic-auth-password)")
-# Lightdash headless setup always creates its project(s) too (LD_SETUP_PROJECTS); the single-project variables
-# only support Databricks. Read-only warehouse role over TLS; dbt connection "none" = deployed by the CLI.
-LIGHTDASH_SETUP_PROJECTS=$(jq -cn --arg host "$RDS_HOST" --arg pw "$(param postgres-reader-password)" '[{
-  name: "Juan the Drinker",
-  warehouseConnection: {type: "postgres", host: $host, port: 5432, dbname: "juan", schema: "marts",
-                        user: "juan_reader", password: $pw, sslmode: "require"},
-  dbtConnection: {type: "none"}
-}]')
-
+mkdir -p "/opt/$PROJECT/state" && chmod 700 "/opt/$PROJECT/state"
 umask 077
 cat > .env <<ENV
 POSTGRES_HOST=$RDS_HOST
@@ -48,7 +45,7 @@ POSTGRES_READER_USER=juan_reader
 POSTGRES_READER_PASSWORD=$(param postgres-reader-password)
 LIGHTDASH_SECRET=$(param lightdash-secret)
 LIGHTDASH_DB_PASSWORD=$(param lightdash-db-password)
-LIGHTDASH_API_KEY=$(param lightdash-api-key)
+LIGHTDASH_API_KEY=$(jq -r '.token // empty' /opt/$PROJECT/state/lightdash-bot.json 2>/dev/null)
 LIGHTDASH_SITE_URL=https://lightdash.$DOMAIN
 LIGHTDASH_S3_BUCKET=$(param config/lightdash-bucket)
 CUBEJS_API_SECRET=$(param cubejs-api-secret)
@@ -57,7 +54,7 @@ CHAT_MODEL_ID=$(param config/bedrock-model-id)
 AWS_REGION=$REGION
 DOMAIN=$DOMAIN
 BASIC_AUTH_HASH='$BASIC_AUTH_HASH'
-LIGHTDASH_SETUP_PROJECTS='$LIGHTDASH_SETUP_PROJECTS'
+JUAN_STATE_DIR=/opt/$PROJECT/state
 ENV
 umask 022
 log ".env written (root-only)"
@@ -76,7 +73,12 @@ log "building and starting services"
 
 # ---- 4. Pipeline: dlt load + dbt build (Dagster), then the dbt catalog Cube reads -------------------------
 log "running the ELT job"
-"${COMPOSE[@]}" exec -T dagster-webserver dagster job execute -m orchestration.definitions -j juan_elt
+if "${COMPOSE[@]}" exec -T dagster-webserver dagster job execute -m orchestration.definitions -j juan_elt \
+    > /var/log/juan-elt.log 2>&1; then
+  log "ELT job: $(grep -o 'RUN_SUCCESS.*' /var/log/juan-elt.log | tail -1)"
+else
+  log "ELT job failed:"; grep -E 'RUN_FAILURE|Error|error' /var/log/juan-elt.log | tail -5; exit 1
+fi
 "${COMPOSE[@]}" exec -T -w /app/transform dagster-webserver dbt docs generate --profiles-dir . --quiet
 mkdir -p transform/target
 for artefact in manifest.json catalog.json; do  # Cube reads these from the host's transform/target
@@ -85,6 +87,10 @@ done
 "${COMPOSE[@]}" restart cube
 
 # ---- 5. Semantic layer + dashboard as code ---------------------------------------------------------------
+log "bootstrapping Lightdash (organisation + deploy user + API token, first run only)"
+"${COMPOSE[@]}" --profile tools run --rm -T --entrypoint node lightdash-cli /app/bootstrap.js
+token=$(jq -r .token "/opt/$PROJECT/state/lightdash-bot.json")
+sed -i "s|^LIGHTDASH_API_KEY=.*|LIGHTDASH_API_KEY=$token|" .env  # the CLI container reads it from .env
 log "deploying Lightdash project, charts and dashboard"
 "${COMPOSE[@]}" --profile tools run --rm -T --entrypoint dbt lightdash-cli deps --profiles-dir .  # host clone
 "${COMPOSE[@]}" --profile tools run --rm -T --entrypoint /app/deploy.sh lightdash-cli
