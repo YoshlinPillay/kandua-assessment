@@ -12,8 +12,13 @@ COMPOSE=(docker compose -f docker-compose.yml -f docker-compose.aws.yml)
 log() { echo "[deploy $(date -u +%H:%M:%S)] $*"; }
 
 cd "$APP"
-log "updating code to origin/$REF"
-git fetch --quiet origin "$REF" && git checkout --quiet -B "$REF" "origin/$REF"
+if [ "${JUAN_DEPLOY_UPDATED:-}" != 1 ]; then
+  log "updating code to origin/$REF"
+  git fetch --quiet origin "$REF" && git checkout --quiet -B "$REF" "origin/$REF"
+  # This script just replaced itself on disk, but bash is still executing the copy it already read.
+  # Re-exec so the rest of the deploy runs the NEW version (a stale run once skipped a fix entirely).
+  JUAN_DEPLOY_UPDATED=1 exec "$APP/deploy/aws/deploy.sh"
+fi
 
 # ---- 1. Secrets and settings -> root-only .env ------------------------------------------------------------
 param() { aws ssm get-parameter --region "$REGION" --with-decryption --name "/$PROJECT/$1" --query Parameter.Value --output text; }
