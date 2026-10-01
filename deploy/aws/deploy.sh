@@ -22,6 +22,14 @@ DOMAIN=$(param config/public-domain)
 MASTER=$(aws secretsmanager get-secret-value --region "$REGION" --secret-id "$(param config/rds-master-secret)" \
   --query SecretString --output text)
 BASIC_AUTH_HASH=$(docker run --rm caddy:2.10-alpine caddy hash-password --plaintext "$(param basic-auth-password)")
+# Lightdash headless setup always creates its project(s) too (LD_SETUP_PROJECTS); the single-project variables
+# only support Databricks. Read-only warehouse role over TLS; dbt connection "none" = deployed by the CLI.
+LIGHTDASH_SETUP_PROJECTS=$(jq -cn --arg host "$RDS_HOST" --arg pw "$(param postgres-reader-password)" '[{
+  name: "Juan the Drinker",
+  warehouseConnection: {type: "postgres", host: $host, port: 5432, dbname: "juan", schema: "marts",
+                        user: "juan_reader", password: $pw, sslmode: "require"},
+  dbtConnection: {type: "none"}
+}]')
 
 umask 077
 cat > .env <<ENV
@@ -44,6 +52,7 @@ CHAT_MODEL_ID=$(param config/bedrock-model-id)
 AWS_REGION=$REGION
 DOMAIN=$DOMAIN
 BASIC_AUTH_HASH='$BASIC_AUTH_HASH'
+LIGHTDASH_SETUP_PROJECTS='$LIGHTDASH_SETUP_PROJECTS'
 ENV
 umask 022
 log ".env written (root-only)"

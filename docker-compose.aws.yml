@@ -45,6 +45,7 @@ services:
       LD_SETUP_ADMIN_NAME: Deploy Bot
       LD_SETUP_ADMIN_EMAIL: deploy@${DOMAIN}
       LD_SETUP_ADMIN_API_KEY: ${LIGHTDASH_API_KEY}
+      LD_SETUP_PROJECTS: ${LIGHTDASH_SETUP_PROJECTS}  # Postgres project on RDS (read-only role, TLS)
 
   lightdash-cli:
     environment:

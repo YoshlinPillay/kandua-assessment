@@ -10,7 +10,7 @@ PROFILE=${AWS_PROFILE_NAME:-kandua}
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 
 eval "$(docker run --rm --user "$(id -u):$(id -g)" -e HOME=/home/aws -v "$HOME/.aws:/home/aws/.aws" \
-  amazon/aws-cli:2.37.7 configure export-credentials --profile "$PROFILE" --format env)"
+  amazon/aws-cli:2.37.7 configure export-credentials --profile "$PROFILE" --region af-south-1 --format env)"
 
 exec docker run --rm -i --user "$(id -u):$(id -g)" \
   -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN -e AWS_REGION=af-south-1 \
