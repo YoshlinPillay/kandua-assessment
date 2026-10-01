@@ -151,3 +151,33 @@ def test_bakeoff_grounding_requires_the_value_in_query_rows():
     assert _grounded(queries, "21587.09")
     assert not _grounded(queries, "104")
     assert not _grounded([], "21587.09")
+
+
+def test_off_topic_guardrail_fires_without_querying_data():
+    model = ScriptedModel(
+        tool_call("t1", "off_topic", {"reason": "geography question"}),
+        tool_call("t2", "run_query", GOOD_QUERY),  # the next, on-topic question
+        text("Juan saved R 21,587.09."),
+    )
+    cube = FakeCube()
+    history: list[dict] = []
+
+    first = answer("What is the capital of France?", history, model, "m", cube)
+    assert first.off_topic and first.reason == "geography question"
+    assert first.queries == [] and cube.loaded == []
+    # history stays valid: tool call answered, then an assistant turn, so a new user question can follow
+    assert [m["role"] for m in history] == ["user", "assistant", "user", "assistant"]
+
+    second = answer("How much did Juan save on happy hours?", history, model, "m", cube)
+    assert not second.off_topic and second.answer == "Juan saved R 21,587.09."
+    assert len(cube.loaded) == 1
+
+
+def test_off_topic_gifs_exist_and_are_animated():
+    from pathlib import Path
+
+    from PIL import Image
+
+    gifs = sorted((Path(__file__).resolve().parents[1] / "chat/assets").glob("offtopic_*.gif"))
+    assert len(gifs) == 3
+    assert all(Image.open(g).n_frames > 1 for g in gifs)

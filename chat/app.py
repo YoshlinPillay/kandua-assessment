@@ -3,11 +3,16 @@
 Run locally: `make chat` (http://localhost:8501). Every answer shows the Cube queries and rows it came from.
 """
 
+import random
+from pathlib import Path
+
 import streamlit as st
 
 from chat.agent import answer
 from chat.cube_client import CubeClient
 from chat.models import CANDIDATES, DEFAULT_MODEL, bedrock_runtime
+
+OFF_TOPIC_GIFS = sorted((Path(__file__).parent / "assets").glob("offtopic_*.gif"))
 
 EXAMPLES = [
     "Which beverage type does Juan drink the most?",
@@ -42,13 +47,21 @@ def clients():
 st.session_state.setdefault("history", [])  # Bedrock Converse messages (append-only)
 st.session_state.setdefault("turns", [])  # what the UI renders
 
-for turn in st.session_state.turns:
-    with st.chat_message("user"):
-        st.write(turn["question"])
-    with st.chat_message("assistant"):
-        st.write(turn["answer"])
+
+def render(turn: dict) -> None:
+    st.write(turn["answer"])
+    if turn.get("gif"):  # topic guardrail fired: no data, just a nudge back to Juan
+        st.image(turn["gif"], width=360)
+    else:
         with st.expander(f"Queries ({len(turn['queries'])}) · {turn['model']}"):
             st.json(turn["queries"])
+
+
+for past in st.session_state.turns:
+    with st.chat_message("user"):
+        st.write(past["question"])
+    with st.chat_message("assistant"):
+        render(past)
 
 if question := st.chat_input("Ask a question about Juan's drinking habits"):
     with st.chat_message("user"):
@@ -56,9 +69,12 @@ if question := st.chat_input("Ask a question about Juan's drinking habits"):
     with st.chat_message("assistant"), st.spinner("Querying the semantic layer…"):
         model, cube = clients()
         result = answer(question, st.session_state.history, model, CANDIDATES[model_label], cube)
-        st.write(result.answer)
-        with st.expander(f"Queries ({len(result.queries)}) · {model_label}"):
-            st.json(result.queries)
-    st.session_state.turns.append(
-        {"question": question, "answer": result.answer, "queries": result.queries, "model": model_label}
-    )
+        turn = {
+            "question": question,
+            "answer": result.answer,
+            "queries": result.queries,
+            "model": model_label,
+            "gif": str(random.choice(OFF_TOPIC_GIFS)) if result.off_topic and OFF_TOPIC_GIFS else None,  # noqa: S311
+        }
+        render(turn)
+    st.session_state.turns.append(turn)

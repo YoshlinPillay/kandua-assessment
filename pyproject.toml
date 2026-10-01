@@ -27,6 +27,7 @@ dev = [
     "sqlfluff-templater-dbt>=3.2",
     "pre-commit>=4",
     "pydbml>=1.1",
+    "pillow>=10",  # chat/assets/generate_offtopic_gifs.py
 ]
 
 [build-system]
