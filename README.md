@@ -119,6 +119,11 @@ into ANSWERS.md), `make lint`, `make down` (stop; data volumes are kept).
 
 Locally, `pre-commit install` gives the same lint gates on every commit.
 
+**Branching.** This was a one-person assessment, so commits went straight to `main`, with pre-commit and CI
+as the gates. On a team the flow would be: a short-lived feature branch per change, a pull request that CI
+must pass (lint, pipeline, tests, `terraform plan` for `infra/`), at least one reviewer, and squash-merge
+into a protected `main`, which is the only branch that redeploys (D-037).
+
 ## Deploy to AWS
 
 Infrastructure is in `infra/terraform/` (Terraform 1.16, run through its official container, so nothing is
