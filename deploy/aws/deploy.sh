@@ -11,8 +11,10 @@ APP=/opt/$PROJECT/app
 COMPOSE=(docker compose -f docker-compose.yml -f docker-compose.aws.yml)
 LOG=/var/log/juan-deploy.log
 # Full log on the host: SSM truncates command output at 24 KB, which Dagster's debug output fills.
-[ "${JUAN_DEPLOY_UPDATED:-}" = 1 ] || : > "$LOG"
-exec > >(tee -a "$LOG") 2>&1
+if [ "${JUAN_DEPLOY_UPDATED:-}" != 1 ]; then  # the re-exec'd copy inherits this redirect: don't tee twice
+  : > "$LOG"
+  exec > >(tee -a "$LOG") 2>&1
+fi
 log() { echo "[deploy $(date -u +%H:%M:%S)] $*"; }
 trap 'log "FAILED at line $LINENO (exit $?); full log: $LOG"' ERR
 
@@ -99,4 +101,4 @@ log "deploying Lightdash project, charts and dashboard"
 chmod 600 "/opt/$PROJECT/lightdash-invites.txt"
 
 log "done: https://lightdash.$DOMAIN  https://chat.$DOMAIN  https://dagster.$DOMAIN"
-log "Lightdash invite links: sudo cat /opt/$PROJECT/lightdash-invites.txt (via SSM Session Manager)"
+log "Lightdash invite links: run 'make tf-invites' locally"
