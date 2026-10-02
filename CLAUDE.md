@@ -16,7 +16,7 @@ and every number. Your job is to propose, implement and verify. Never decide sil
 |---|---|---|
 | Ingestion (E+L) | dlt → Postgres `raw` schema | `ingestion/` |
 | Storage | PostgreSQL 16 (local: compose, cloud: AWS RDS) | `docker-compose.yml`, `infra/terraform/` |
-| Transform (T) | dbt Core: `staging` → `core` (3NF OLTP) → `marts` (star) | `transform/` |
+| Transform (T) | dbt Core: `staging` → `core` (3NF OLTP) → `intermediate` (shared rollups) → `marts` (star) | `transform/` |
 | Orchestration | Dagster (`dagster-dlt`, `dagster-dbt`) | `orchestration/` |
 | Semantic layer | Metrics in dbt YAML `meta` → Lightdash; Cube models **generated** via `cube_dbt` | `transform/models/marts/*.yml`, `semantic/cube/` |
 | BI | Lightdash (charts as code) | `lightdash/` |

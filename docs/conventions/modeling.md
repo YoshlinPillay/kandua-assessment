@@ -6,6 +6,7 @@
 | raw | `raw` | dlt tables | Exact copy of the source JSON as loaded by dlt | Never edited. dlt metadata columns (`_dlt_*`) are kept. |
 | staging | `staging` | view | 1:1 with a raw table: rename, cast, trim, dedup | No joins across entities. Every cleaning rule has a comment and an entry in `docs/data_profile.md`. |
 | core | `core` | table, **contract enforced** | Transactional model (3NF) implementing `docs/erm/transactional.dbml` | PK / FK / NOT NULL / UNIQUE declared as dbt constraints so Postgres enforces them. |
+| intermediate | `intermediate` | view | Reusable business logic between core and marts: per-line money/unit arithmetic, visit and daily rollups | `int_*`. Reads `core` (and other `int_` models) only. Internal: not exposed to BI, Cube or the read-only role. |
 | marts | `marts` | table | Analytical star schema (Q9) | `fct_*` / `dim_*`. Metrics are defined here in YAML `meta` only. |
 
 ## Naming
@@ -40,3 +41,6 @@
 - Facts store additive measures (`quantity`, `alcohol_units`, `amount_paid`, `amount_saved`) precomputed
   once, so BI and Cube don't reimplement the arithmetic.
 - `dim_date` is generated with `dbt_utils.date_spine`.
+- **Facts never read other facts.** A fact reads `core`, `intermediate` and dimensions only. Logic that two
+  facts share (per-line amounts, visit or daily rollups) goes in an `int_` model (D-036), so a change to one
+  published table can't cascade into the others.

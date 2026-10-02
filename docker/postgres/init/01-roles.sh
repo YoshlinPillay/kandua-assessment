@@ -7,6 +7,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
      -v reader="$POSTGRES_READER_USER" -v reader_pw="$POSTGRES_READER_PASSWORD" -v db="$POSTGRES_DB" <<'SQL'
 create schema if not exists raw;
 create schema if not exists staging;
+create schema if not exists intermediate;
 create schema if not exists core;
 create schema if not exists marts;
 create database dagster;  -- Dagster run/event storage (D-033)

@@ -1,0 +1,36 @@
+version: 2
+
+# Intermediate layer: reusable business logic between the 3NF core and the star schema. Facts read from core
+# and intermediate only, never from another fact, so a change to one published table can't cascade into the
+# others. Internal: not exposed to Lightdash, Cube or the read-only role.
+
+models:
+  - name: int_drink_lines
+    description: One row per drink line, with its visit date, bar, beverage and per-line money and units (D-022).
+    columns:
+      - name: drink_id
+        data_tests: [unique, not_null]
+      - name: visit_id
+        data_tests: [not_null]
+      - name: alcohol_units
+        data_tests: [not_null]
+      - name: amount_paid
+        data_tests: [not_null]
+      - name: amount_saved
+        data_tests: [not_null]
+
+  - name: int_visit_drinks
+    description: One row per visit with at least one drink line, with drink lines, servings, units and money summed.
+    columns:
+      - name: visit_id
+        data_tests: [unique, not_null]
+
+  - name: int_daily_consumption
+    description: >
+      One row per calendar day from the first to the last visit date, zero-drinking days included, with visits,
+      servings, alcohol units and the "drunk" flag (≥ drunk_units_threshold units, D-015).
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+      - name: alcohol_units
+        data_tests: [not_null]

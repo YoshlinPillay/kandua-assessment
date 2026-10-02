@@ -30,7 +30,7 @@ or SQL query, and is checked against an independent pandas computation.
 | Layer | Tool | |
 |---|---|---|
 | Ingestion | [dlt](https://dlthub.com) | Drive JSON → Postgres `raw` |
-| Warehouse | PostgreSQL 16 | `raw` → `staging` → `core` (3NF) → `marts` (star) |
+| Warehouse | PostgreSQL 16 | `raw` → `staging` → `core` (3NF) → `intermediate` → `marts` (star) |
 | Transformation | [dbt Core](https://www.getdbt.com) | enforced contracts, 79 data tests |
 | Orchestration | [Dagster](https://dagster.io) | dlt + dbt as assets, tests as asset checks |
 | Metrics | dbt YAML | written once, used by both consumers below |
@@ -96,7 +96,7 @@ into ANSWERS.md), `make lint`, `make down` (stop; data volumes are kept).
 
 | Check | Proves |
 |---|---|
-| `dbt build` (79 tests) | Keys, relationships, accepted values, value rules, reconciliation of raw/staging/core/marts. Warn-level tests keep known data quirks visible. |
+| `dbt build` (90 tests) | Keys, relationships, accepted values, value rules, reconciliation of raw/staging/core/marts. Warn-level tests keep known data quirks visible. |
 | `tests/answers/` | Each Q1–Q7 answer in SQL **equals** an independent pandas implementation, and the star schema reproduces it |
 | `tests/test_semantic_parity.py` | Cube and every saved Lightdash chart return the verified answers |
 | `tests/test_erm_drift.py` | `docs/erm/*.dbml` matches the dbt contracts **and** the live database |
@@ -153,7 +153,7 @@ delivered answers document, **never in this repository**.
 
 ```
 ingestion/            dlt source (Google Drive -> raw)
-transform/            dbt project: staging, core (3NF), marts (star + metrics), analyses (Q1–Q7 SQL), tests
+transform/            dbt project: staging, core (3NF), intermediate, marts (star + metrics), analyses (Q1–Q7 SQL), tests
 orchestration/        Dagster definitions (dlt + dbt assets)
 semantic/cube/        Cube config; cubes generated from the dbt manifest at runtime
 lightdash/            charts and dashboard as code

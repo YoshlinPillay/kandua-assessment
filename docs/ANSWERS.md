@@ -338,6 +338,8 @@ Other changes for an analytical platform:
 - **Store the price paid on the transaction.**
 - **Slowly changing dimensions.** If prices or bar details change, use type-2 history (dbt snapshots) on
   `stock` and `bar`.
+- **An intermediate layer.** Per-line amounts and the visit and daily rollups live in `int_` models, so no
+  fact is built from another fact and a change to one published table can't cascade (D-036).
 - **A semantic layer.** Metrics are defined once in dbt YAML and served to Lightdash and Cube (see P6).
 - **Columnar storage at scale.** DuckDB or a warehouse like Redshift/BigQuery instead of row-store Postgres.
   At 1,000 rows Postgres is the right call.

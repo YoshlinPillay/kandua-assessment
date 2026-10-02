@@ -16,7 +16,7 @@ flowchart LR
     subgraph Orchestration["Dagster · juan_elt"]
         direction LR
         DLT["dlt<br/>extract + load"]
-        DBT["dbt Core<br/>build: 18 models + 79 tests"]
+        DBT["dbt Core<br/>build: 21 models + 90 tests"]
     end
 
     subgraph Warehouse["PostgreSQL 16 (local container / AWS RDS)"]
@@ -24,8 +24,9 @@ flowchart LR
         RAW[("raw<br/>as loaded by dlt")]
         STG[("staging<br/>clean, typed, no joins")]
         CORE[("core<br/>3NF, enforced PK/FK")]
+        INT[("intermediate<br/>shared rollups")]
         MARTS[("marts<br/>star schema + metrics")]
-        RAW --> STG --> CORE --> MARTS
+        RAW --> STG --> CORE --> INT --> MARTS
     end
 
     subgraph Semantic["Semantic layer: metrics defined once in dbt YAML"]
@@ -39,7 +40,7 @@ flowchart LR
     end
 
     GD --> DLT --> RAW
-    DBT -. builds .-> STG & CORE & MARTS
+    DBT -. builds .-> STG & CORE & INT & MARTS
     MARTS --- YAML
     YAML -- "lightdash deploy" --> LD
     YAML -- "manifest + catalog" --> CUBE
@@ -51,9 +52,9 @@ flowchart LR
 | Layer | Tool | What happens | Where |
 |---|---|---|---|
 | Extract + load | **dlt** | Downloads the three files and infers types. Unnests `bars[].stock[]` into `raw.bars__stock` and adds load metadata. | `ingestion/` |
-| Storage | **PostgreSQL 16** | Four schemas: `raw` → `staging` → `core` → `marts` | `docker-compose.yml`, `infra/terraform/rds.tf` |
-| Transform | **dbt Core** | Staging cleans. **Core** implements the ERM with *enforced contracts* (Postgres creates the PK/FK/UNIQUE/CHECK constraints). **Marts** is the star schema (Q9). | `transform/` |
-| Orchestration | **Dagster** | One job. Every dlt table and dbt model is an asset, every dbt test an asset check. Lineage reads ingestion → staging → core → marts. | `orchestration/` |
+| Storage | **PostgreSQL 16** | Five schemas: `raw` → `staging` → `core` → `intermediate` → `marts` | `docker-compose.yml`, `infra/terraform/rds.tf` |
+| Transform | **dbt Core** | Staging cleans. **Core** implements the ERM with *enforced contracts* (Postgres creates the PK/FK/UNIQUE/CHECK constraints). **Intermediate** holds the per-line arithmetic and the visit/daily rollups that several facts share. **Marts** is the star schema (Q9); facts never read other facts (D-036). | `transform/` |
+| Orchestration | **Dagster** | One job. Every dlt table and dbt model is an asset, every dbt test an asset check. Lineage reads ingestion → staging → core → intermediate → marts. | `orchestration/` |
 | Metrics | **dbt YAML** (Lightdash `meta`) | 17 metrics + joins, written once | `transform/models/marts/_marts.yml` |
 | Dashboard | **Lightdash** | 14 charts + 1 dashboard *as code*, schema-linted before upload | `lightdash/` |
 | Semantic API | **Cube** | Cubes **generated at runtime** from the dbt manifest + catalog. No hand-written metrics. | `semantic/cube/model/` |

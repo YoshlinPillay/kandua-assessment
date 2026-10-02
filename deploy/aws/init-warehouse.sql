@@ -1,6 +1,6 @@
 -- Idempotent warehouse setup on RDS, run by deploy.sh with the RDS master login (which rotates, so it is
 -- used for nothing else). Mirrors docker/postgres/init/01-roles.sh for the local stack.
---   juan_loader  owns raw/staging/core/marts (dlt + dbt + Dagster)
+--   juan_loader  owns raw/staging/intermediate/core/marts (dlt + dbt + Dagster)
 --   juan_reader  SELECT on core + marts only (Lightdash, Cube, reviewers)
 select format('create role juan_loader login password %L', :'loader_pw')
 where not exists (select 1 from pg_roles where rolname = 'juan_loader') \gexec
@@ -19,6 +19,7 @@ grant connect on database juan to juan_reader;
 
 create schema if not exists raw authorization juan_loader;
 create schema if not exists staging authorization juan_loader;
+create schema if not exists intermediate authorization juan_loader;
 create schema if not exists core authorization juan_loader;
 create schema if not exists marts authorization juan_loader;
 

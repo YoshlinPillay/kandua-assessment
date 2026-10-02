@@ -1,4 +1,4 @@
-"""Dagster: one job that runs dlt (Drive -> raw), then dbt build (staging -> core -> marts + tests).
+"""Dagster: one job that runs dlt (Drive -> raw), then dbt build (staging -> core -> intermediate -> marts).
 
 Asset keys are aligned so the lineage graph is continuous: dlt resource `bars` materialises
 AssetKey(["juan_raw", "bars"]), which is exactly the key dbt uses for `source('juan_raw', 'bars')`.
@@ -47,7 +47,8 @@ class SourceAlignedDbtTranslator(DagsterDbtTranslator):
         return super().get_asset_key(dbt_resource_props)
 
     def get_group_name(self, dbt_resource_props: Mapping[str, Any]) -> str | None:
-        # Group dbt assets by warehouse layer, so the lineage reads ingestion -> staging -> core -> marts.
+        # Group dbt assets by warehouse layer, so the lineage reads
+        # ingestion -> staging -> core -> intermediate -> marts.
         return dbt_resource_props.get("schema") or super().get_group_name(dbt_resource_props)
 
 
