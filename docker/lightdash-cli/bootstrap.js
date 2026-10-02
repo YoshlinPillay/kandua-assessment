@@ -18,7 +18,13 @@ const save = () => fs.writeFileSync(STATE, JSON.stringify(state), { mode: 0o600 
 async function call(method, path, body, cookie) {
   const res = await fetch(U + path, {
     method,
-    headers: { 'Content-Type': 'application/json', ...(cookie ? { Cookie: cookie } : {}) },
+    headers: {
+      'Content-Type': 'application/json',
+      // On AWS Lightdash runs with SECURE_COOKIES + TRUST_PROXY (it sits behind Caddy's HTTPS). Express only
+      // issues the secure session cookie when the request is HTTPS, so say what Caddy would say.
+      'X-Forwarded-Proto': 'https',
+      ...(cookie ? { Cookie: cookie } : {}),
+    },
     body: body ? JSON.stringify(body) : undefined,
   });
   const json = await res.json().catch(() => ({}));
@@ -34,12 +40,25 @@ async function call(method, path, body, cookie) {
     state.email = state.email || `deploy@${process.env.DOMAIN}`;
     state.password = state.password || crypto.randomBytes(24).toString('base64url');
     save(); // persist the password before registering, so a crash can't orphan the account
-    const { cookie } = await call('POST', '/api/v1/user', {
-      firstName: 'Deploy',
-      lastName: 'Bot',
-      email: state.email,
-      password: state.password,
-    });
+    let cookie;
+    if (!state.registered) {
+      try {
+        ({ cookie } = await call('POST', '/api/v1/user', {
+          firstName: 'Deploy',
+          lastName: 'Bot',
+          email: state.email,
+          password: state.password,
+        }));
+      } catch (e) {
+        // Registered by an earlier, interrupted run: log in with the saved credentials instead.
+        ({ cookie } = await call('POST', '/api/v1/login', { email: state.email, password: state.password }));
+      }
+      state.registered = true;
+      save();
+    } else {
+      // a previous run registered the user but stopped before creating the organisation
+      ({ cookie } = await call('POST', '/api/v1/login', { email: state.email, password: state.password }));
+    }
     await call('PUT', '/api/v1/org', { name: 'Juan the Drinker' }, cookie);
     console.log('organisation "Juan the Drinker" created with deploy user', state.email);
   } else {

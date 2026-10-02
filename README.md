@@ -11,6 +11,7 @@ or SQL query, and is checked against an independent pandas computation.
 | **How the AI agent was used and guard-railed** | [AI_WORKFLOW.md](AI_WORKFLOW.md) · [CLAUDE.md](CLAUDE.md) · [.claude/](.claude/) |
 | **Data profile and cleaning decisions** | [docs/data_profile.md](docs/data_profile.md) |
 | **Chat model bake-off** | [docs/bakeoff.md](docs/bakeoff.md) |
+| **Tool evaluation: Altimate Code** | [docs/altimate-evaluation.md](docs/altimate-evaluation.md) |
 
 | Q | Answer |
 |---|---|
