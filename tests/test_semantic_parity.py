@@ -166,3 +166,14 @@ def test_every_dashboard_chart_runs_and_returns_rows(lightdash_charts):
         if response.status_code != 200 or not response.json()["results"]["rows"]:
             failures[chart["name"]] = response.text[:200]
     assert failures == {}
+
+
+def test_dashboard_space_is_visible_to_the_whole_project(lightdash_charts):
+    """Regression: `lightdash upload` made the space private to the deploy user, hiding the dashboard from
+    reviewers (viewer) and the human admin."""
+    headers, _ = lightdash_charts
+    projects = requests.get(f"{LIGHTDASH_URL}/api/v1/org/projects", headers=headers, timeout=30).json()
+    project = next(p["projectUuid"] for p in projects["results"] if p["name"] == "Juan the Drinker")
+    spaces = requests.get(f"{LIGHTDASH_URL}/api/v1/projects/{project}/spaces", headers=headers, timeout=30)
+    space = next(s for s in spaces.json()["results"] if s["name"] == "Juan the drinker")
+    assert space["inheritsFromOrgOrProject"] is True

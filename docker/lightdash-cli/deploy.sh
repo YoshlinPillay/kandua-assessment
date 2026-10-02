@@ -24,4 +24,5 @@ uuid=$(node -e '
     .then(r => r.json()).then(j => console.log((j.results || []).find(p => p.name === process.argv[1]).projectUuid));
 ' "$PROJECT_NAME")
 lightdash lint --path /app/lightdash
-lightdash upload --project "$uuid" --path /app/lightdash --force
+lightdash upload --project "$uuid" --path /app/lightdash --force --public
+node /app/publish-spaces.js  # spaces created earlier as private: make them visible to the project
