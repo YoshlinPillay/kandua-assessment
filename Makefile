@@ -15,7 +15,7 @@ AWS_CLI := docker run --rm -it --user $(shell id -u):$(shell id -g) -e HOME=/hom
 -include .env
 export
 
-.PHONY: help venv up down fetch-raw load pipeline dagster-run dagster-dev lightdash-deploy screenshot screenshots chat bakeoff aws-login aws-whoami tf-fmt tf-validate tf-bootstrap tf-init tf-plan tf-apply tf-output tf-deploy tf-invites tf-destroy docs lint test test-hooks dbt
+.PHONY: help venv up down fetch-raw load pipeline dagster-run dagster-dev lightdash-deploy screenshot screenshots chat bakeoff aws-login aws-whoami tf-fmt tf-validate tf-bootstrap tf-init tf-plan tf-apply tf-output tf-deploy tf-invites tf-credentials tf-destroy docs lint test test-hooks dbt
 
 help:  ## List targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' Makefile | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
@@ -121,6 +121,14 @@ tf-invites:  ## Print the Lightdash login links created on the AWS host (via SSM
 	  --query Command.CommandId --output text); sleep 4; \
 	$(AWS_CLI_BATCH) ssm get-command-invocation --command-id "$$id" \
 	  --instance-id "$$($(TF) output -raw instance_id)" --query StandardOutputContent --output text
+
+tf-credentials:  ## Print reviewer logins (URLs + passwords). Run in YOUR terminal, not via an AI agent session.
+	@echo "Chat + Dagster basic auth   user: juan"
+	@echo "                            password: $$($(AWS_CLI_BATCH) ssm get-parameter --name /juan/basic-auth-password --with-decryption --query Parameter.Value --output text)"
+	@echo "Database (read-only, TLS)   host: $$($(TF) output -raw warehouse_host)  port: 5432  db: juan  sslmode: require"
+	@echo "                            user: juan_reader"
+	@echo "                            password: $$($(AWS_CLI_BATCH) ssm get-parameter --name /juan/postgres-reader-password --with-decryption --query Parameter.Value --output text)"
+	@echo "Lightdash                   $$($(TF) output -raw lightdash_url) (logins set via 'make tf-invites' links)"
 
 docs:  ## Re-embed the Q1–Q7 analysis SQL into docs/ANSWERS.md
 	$(BIN)/python docs/embed_sql.py
